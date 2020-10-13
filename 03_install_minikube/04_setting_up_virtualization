@@ -1,0 +1,70 @@
+Section 3. Installing Minikube for local k8s development
+
+4-7. Setting up Virtualization, Windows 10, Installing kubectl, minikube, troubleshooting
+
+- course uses MiniKube
+- i'm using Docker for Desktop w/Kubernetes running as well
+
+- brew upgrade kubectl , minikube
+
+- not going to use minikube
+
+- if minikube hangs ?
+  - try "minikube start --bootstrapper=localkube"  <- on OSX+
+
+- occasional MiniKube crashes
+  - minikube stop - stops virtual machine manager
+  - minikube delete - delete the old vm
+    - optional : find home directory
+      - delete .minikube & .kube folders
+  - minikube start - start a new one
+
+
+COMMAND LINE
+============
+- which kubectl
+- kubectl
+- which minikube
+- minikube
+- minikube version
+- minikube update-check
+- kubectl version
+- brew upgrade kubectl
+- kubectl version
+- minikube version
+- minikube start
+bobzawislak (main *) udemy_k8s_deploy_msvcs_2aws $ minikube start
+😄  minikube v1.14.0 on Darwin 10.15.7
+🆕  Kubernetes 1.19.2 is now available. If you would like to upgrade, specify: --kubernetes-version=v1.19.2
+✨  Using the virtualbox driver based on existing profile
+💿  Downloading VM boot image ...
+    > minikube-v1.13.1.iso.sha256: 65 B / 65 B [-------------] 100.00% ? p/s 0s
+    > minikube-v1.13.1.iso: 173.91 MiB / 173.91 MiB [] 100.00% 3.42 MiB p/s 52s
+👍  Starting control plane node minikube in cluster minikube
+🤷  virtualbox "minikube" VM is missing, will recreate.
+🔥  Creating virtualbox VM (CPUs=2, Memory=2000MB, Disk=20000MB) ...
+🐳  Preparing Kubernetes v1.17.0 on Docker 19.03.12 ...
+    > kubelet.sha256: 65 B / 65 B [--------------------------] 100.00% ? p/s 0s
+    > kubectl.sha256: 65 B / 65 B [--------------------------] 100.00% ? p/s 0s
+    > kubeadm.sha256: 65 B / 65 B [--------------------------] 100.00% ? p/s 0s
+    > kubeadm: 37.52 MiB / 37.52 MiB [---------------] 100.00% 1.30 MiB p/s 29s
+    > kubectl: 41.48 MiB / 41.48 MiB [---------------] 100.00% 1.43 MiB p/s 29s
+    > kubelet: 106.39 MiB / 106.39 MiB [-------------] 100.00% 1.95 MiB p/s 55s
+🔎  Verifying Kubernetes components...
+🌟  Enabled addons: storage-provisioner, default-storageclass
+
+❗  /usr/local/bin/kubectl is version 1.19.2, which may have incompatibilites with Kubernetes 1.17.0.
+💡  Want kubectl v1.17.0? Try 'minikube kubectl -- get pods -A'
+🏄  Done! kubectl is now configured to use "minikube" by default
+
+- minikube status
+  - will take a LONG time the 1st time
+  minikube
+  type: Control Plane
+  host: Running
+  kubelet: Running
+  apiserver: Running
+  kubeconfig: Configured
+
+- minikube stop
+- minikube status

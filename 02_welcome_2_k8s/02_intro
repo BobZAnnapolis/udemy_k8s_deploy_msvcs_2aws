@@ -1,0 +1,30 @@
+Welcome to K8S
+==============
+
+Container Orchestration systems, many
+- Kubernetes, k8s, most popular {for now}
+
+Docker
+- containerization system
+- deploy individual parts of a system in containers
+
+- divide up an application into separate containers / microservices
+
+- difficult to manage as separate containers, have to monitor using monitoring tools
+- too cumbersome -
+
+- solution : Orchestration Systems
+  - used to manage containers
+  - use manifests to
+    - define entire architecture
+      - robustness
+      - disk solution to use
+      - images / containers to use
+      - restore to a steady-state w/no manual intervention
+
+- Docker Swarm has its own orchestration system
+  - part of Docker Engine installation
+
+- Docker Swarm simpler
+- K8S far richer / powerful / popular
+  - easier to use manifests and move up to Cloud

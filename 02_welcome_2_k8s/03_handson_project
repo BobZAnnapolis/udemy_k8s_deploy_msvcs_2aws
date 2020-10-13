@@ -1,0 +1,19 @@
+03 Hands-On Project
+===================
+
+- fleet management system
+
+- designed for developers, DevOps
+- use-case driven
+- not going to into all the commands
+- using pre-defined images loaded onto DockerHub
+  - java-based
+  - angular front-end
+  - microservice architecture
+    - a handful of microservices
+  - tracking lorries
+
+- start off w/basic prototype system
+  - add layers
+
+- 

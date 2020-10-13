@@ -1,0 +1,37 @@
+Section 4. )optional_ Docker Quickstart
+
+8. Docker Overview
+9. Docker Containers vs Images
+10. Running Containers from DockerHub
+
+ - overview
+   - self-contained entire 'application', all dependencies
+   - just needs to run in a Docker engine
+   - will run the same, anywhere
+
+- containers vs images
+  - image : entire definition of a container
+    - big binary file
+    - running image : container
+  - publish images
+    - DockerHub
+  - course uses existing images for the course
+    - richardchesterwood
+  - verify docker installed
+    - docker from command line
+    - Enterprise, Community {open source, free}
+  - MacOS Docker for Desktop takes care of a lot of the installations / setup in the video
+
+- running containers from DockerHub
+  - docker
+  - dlogin
+  - docker images
+  - docker image pull richardchesterwood/k8s-fleetman-webapp-angular:release0-5
+  - docker images
+  - docker container run -p 8080:80 -d  25be029
+    - browser : localhost:8080
+  - docker container ls
+  - docker inspect ecstatic_stonebraker
+  - docker ps -a
+  - docker stop 1b1a5
+  - docker ps -a
