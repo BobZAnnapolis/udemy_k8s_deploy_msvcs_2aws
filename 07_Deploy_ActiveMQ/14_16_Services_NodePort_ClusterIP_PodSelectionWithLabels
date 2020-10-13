@@ -1,0 +1,11 @@
+Section 7. Deploy ActiveMQ as a Pod Service to K8S
+
+- 17. Deploy ActiveMQ as a Pod Service to K8S
+
+- Deploy ActiveMQ as a Pod Service to K8S
+  - need to deploy a "queue" service
+    - allows services to "talk" to each other
+  - Port 8161 is the admin console of the queue
+    - login : admin / admin
+    - expose using 30010
+  
