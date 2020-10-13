@@ -1,0 +1,19 @@
+Section 6. Services in Kubernetes
+
+14. Services
+15. NodePort and ClusterIP
+16. Pod Selection with Labels
+
+- Services
+  - pods are not visible outside the cluster
+    - due to their volatility, ephemeral lifecycle
+  - services : long running objects
+    - will have an IP address
+    - stable fixed port
+    - attach services to pods
+  - POD can have LABELs
+    - set up key:value pairs, 1 or more
+      eg, app:webapp
+  - services can use SELECTORS {key value pair} to specify pod labels
+    - this is how we connect the 2
+  

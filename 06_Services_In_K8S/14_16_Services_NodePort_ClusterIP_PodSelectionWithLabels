@@ -1,0 +1,37 @@
+Section 6. Services in Kubernetes
+
+- 14. Services
+- 15. NodePort and ClusterIP
+- 16. Pod Selection with Labels
+
+- Services
+  - webapp pods NOT accessible / visible inside a cluster using a browser
+  - why ? pods are throwaways
+    - taken down / started frequently
+  - service is a long-running objects
+    - will have an IP address
+    - will have a stable fixed port
+  - POD LABELs
+    - key:value pairs to identify pods, >=1
+  - SERVICE SELECTOR
+    - specify the pod LABELs to 'connect' to it
+
+- NodePort and ClusterIP
+  - ClusterIP
+    - only accessible inside the Cluster
+    - eg, used for microservices, internal comms
+  - NodePort
+    - accessible via a browser, usually just the web apps
+    - ONLY use any port # > 30000
+
+- Pod Selection w/Labels
+  - wasn't working according to the course, however,
+  - when i entered this command : minikube service fleetman-webapp0 --url
+  - it gave me the correct URL to use in order to access the landing page
+
+- COMMANDS :
+   91  kubectl apply -f webapp-service.yaml
+   93  kubectl apply -f first-pod.yaml
+  101  kubectl get all
+  102  minikube ip
+  175  minikube service fleetman-webapp0 --url
