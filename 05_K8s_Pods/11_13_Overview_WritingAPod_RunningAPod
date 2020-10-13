@@ -1,0 +1,45 @@
+Section 5. Kubernetes Pods
+
+11. Pods Overview
+12. Writing a Pods
+13. Running a Pod
+
+- Pods Overview
+  - most basic concept in k8s
+  - group of 1 or more containers
+    - typically use 1 container per pod
+    - rarely have a 'sidecar' / helper container
+  - wrapper for a container
+  - need to create pod definitions for K8S to control, ie orchestrate
+    - define requirements for each pod to run, eg restarts, memory consumption, etc
+  - refer to K8S manual for API syntax
+
+- Writing a Pod
+  - see first_pod.yaml
+
+- Running a Pod
+  - kubectl apply -f yaml
+  - {webapp} pods are NOT accessible outside of a cluster the same way as a docker container is
+  - docker describe pod podName
+  - can attach to a pod, execute some commands
+    - kubectl exec podName ls
+  - could do a shell into the container and do a curl to verify web server is running
+    - kubectl exec -it pod/webapp sh
+    - wget http://localhost:80
+    - cat index.html
+
+- COMMANDS :
+85  minikube start
+86  kubectl get all
+87  kubectl apply -f first_pod.yaml
+89  kubectl get all
+90  minikube ip
+    - unlike docker containers - can't use this ip in local browser to access web site
+94  kubectl describe pod webapp
+96  kubectl exec pod/webapp -- ls
+100  kubectl exec -it pod/webapp sh
+     - gets to an interactive shell on the pod
+     - wget http://localhost:80 - download webserver index.html
+     - cat index.html to verify app is running
+
+- need to cfg / run a few more things before we can start accessing the web app in a local browser

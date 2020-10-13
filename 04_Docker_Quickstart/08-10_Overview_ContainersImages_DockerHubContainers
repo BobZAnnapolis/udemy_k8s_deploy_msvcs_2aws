@@ -22,7 +22,7 @@ Section 4. )optional_ Docker Quickstart
     - Enterprise, Community {open source, free}
   - MacOS Docker for Desktop takes care of a lot of the installations / setup in the video
 
-- running containers from DockerHub
+- {COMMANDS} running containers from DockerHub
   - docker
   - dlogin
   - docker images
