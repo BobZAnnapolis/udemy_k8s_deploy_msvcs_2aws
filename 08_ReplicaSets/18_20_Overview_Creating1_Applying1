@@ -1,0 +1,76 @@
+Section 8. K8s ReplicaSets
+
+- 18. ReplicaSets
+- 19. Writing a ReplicaSet
+- 20. Applying a ReplicaSet to k8s
+
+- ReplicaSets
+  - rarely work w/pods directly
+  - usually work w/Deployments or ReplicaSets
+  - pods are short-lived, need replicasets & deployments w/settings to "revive" new ones
+  - if pods are created directly - you/users are responsible for managing their entire lifecyle
+    - when they die, they stay dead
+  - add additional key:value pair to YAML file
+    - k8s will automatically start another one
+  - do NOT need separate pod & replicaset yaml def files
+    - a replicaset yaml is a 2-in-1 pod/replicaset def file
+  - after kubectl apply -f pods.yaml
+  bobzawislak (main *) 08_ReplicaSets $ kubectl get all
+NAME               READY   STATUS    RESTARTS   AGE
+pod/queue          1/1     Running   1          17m
+pod/webapp-pn2kn   1/1     Running   1          17m
+pod/webapp-vh486   1/1     Running   1          17m
+
+NAME                      TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+service/fleetman-queue    NodePort    10.98.212.13    <none>        8161:30010/TCP   17h
+service/fleetman-webapp   NodePort    10.110.20.237   <none>        80:30080/TCP     17h
+service/kubernetes        ClusterIP   10.96.0.1       <none>        443/TCP          19h
+
+NAME                     DESIRED   CURRENT   READY   AGE
+replicaset.apps/webapp   2         2         2       17m
+
+  - now have a replicaset section
+    - lists status of the number of available rep-sets to work with
+  - pods get a unique name
+  - kubectl describe rs webapp
+  Name:         webapp
+Namespace:    default
+Selector:     app=webapp
+Labels:       <none>
+Annotations:  <none>
+Replicas:     2 current / 2 desired
+Pods Status:  2 Running / 0 Waiting / 0 Succeeded / 0 Failed
+Pod Template:
+  Labels:  app=webapp
+  Containers:
+   webapp:
+    Image:        richardchesterwood/k8s-fleetman-webapp-angular:release0-5
+    Port:         <none>
+    Host Port:    <none>
+    Environment:  <none>
+    Mounts:       <none>
+  Volumes:        <none>
+Events:
+  Type    Reason            Age   From                   Message
+  ----    ------            ----  ----                   -------
+  Normal  SuccessfulCreate  27m   replicaset-controller  Created pod: webapp-pn2kn
+  Normal  SuccessfulCreate  27m   replicaset-controller  Created pod: webapp-vh486
+  Normal  SuccessfulCreate  40s   replicaset-controller  Created pod: webapp-rrdb6
+
+
+- COMMANDS
+{sep window} while true; do clear;kubectl get all;echo " ";echo "sleep 5";sleep 5;done
+minikube start
+kubectl get all
+kubectl delete pod/webapp-release-0-5
+kubectl delete pod/webapp-release-0
+kubectl delete pods --all
+kubectl apply -f pods.yaml
+kubectl describe replicaset webapp
+kubectl describe rs webapp
+kubectl get all
+kubectl apply -f services.yaml
+minikube service fleetman-webapp --url
+kubectl get all
+kubectl delete pod webapp-pn2kn
+kubectl describe rs webapp
