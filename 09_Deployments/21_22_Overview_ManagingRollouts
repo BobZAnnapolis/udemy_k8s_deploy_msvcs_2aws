@@ -1,0 +1,46 @@
+Section 9. k8s deployments
+
+- 21. Deployments Overview
+- 22. Managing Rollouts
+
+- deployments overview
+  - more sophisticated replicaset
+  - get automatic rolling updates w/o any downtime
+  - can do rollbacks if anything goes wrong
+  - need to add extra fields to implement rolling updates
+  - an entity in k8s that manages the replicasets for you
+    - just work with the deployments
+  - ROLLING UPDATE : when the container image{s} change in the deployments ...
+    - a new replicaset stood up w/new images
+    - old replicaset stays up
+  - minReadySeconds
+    - pod has to be up/ready this many seconds w/o any pod crashing
+
+- managing rollouts
+  - cmd : kubectl rollout status deployment webapp
+    - tells you current status of any deployments
+  - built-in rollback feature
+  - cmd : kubectl rollout history deployment webapp
+  - kubectl rollout undo deploy webapp {optional: --to-revision=2}
+    - default goes back 1 version
+
+- BE CAREFUL !!!  ROLLBACKS CAN MIS-REPRESENT THE CURRENT YAML FILES
+  - if you stay w/rollback - make sure to get the YAML files in synch
+
+- very helpful to get the system back to a steady state - but you have to be careful to keep running system w/YAML files
+
+- if you specify a BAD container image - k8s will CONTINUOUSLY try to pull that image INFINITELY !!!!!
+  - any replicasets associated w/it will also be unhealthy :-( - BE CAREFUL !!!!
+
+- COMMANDS
+1  kubectl get all
+2  kubectl delete rs webapp
+3  lsa
+4  kubectl delete pod --all
+5  kubectl delete service --all
+6  kubectl apply -f services.yaml
+7  kubectl apply -f pods.yaml
+8  kubectl get all
+9  minikube service fleetman-webapp --url
+10 while true; do clear;kubectl get all;echo " ";echo "sleep 5";sleep 5;done
+11 minikube stop
