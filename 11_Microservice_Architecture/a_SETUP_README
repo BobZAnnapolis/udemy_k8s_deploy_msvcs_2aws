@@ -1,0 +1,21 @@
+WARNING - possible resource problems!
+In this section, we're going to be deploying a lot more resources to your cluster.
+
+I've realised since recording that on some systems, there won't be enough resources (RAM) in minikube
+to manage the full load. For some reason, I got away with it on the videos (although in a later section,
+when we use Mongo, I did have to expand the RAM).
+
+I recommend before starting this section that you set up minikube with plenty of RAM. To do this:
+
+Stop minikube with "minikube stop"
+
+Delete your existing minikube with "minikube delete"
+
+Remove any config files with "rm -rf ~/.kube" and "rm -rf ~/.minikube".
+Or, delete these folders using your file explorer. The folders are stored in your home directory,
+which under windows will be "c:\Users\<your username>"
+
+Now restart minikube with "minikube start --memory 4096".
+
+This will allocate 4Gb of RAM to minikube (I'm assuming you have enough host ram to support this) and
+should give a much more comfortable experience in the next few sections.

@@ -1,0 +1,119 @@
+Section 11. Microservices Architecture
+
+- 29. WARNING : possible resource problems - read setup
+- 30. An Introduction to Microservices
+  - pods, replicasets, deployments, networking
+  - environment variables
+  - get logs from a pod
+  - monolith - entire systems deployed as a single unit, eg Java WAR file
+    - 1 WAR contains many functions, eg, ui, sales, inventory, shopping cart, authentication, etc
+    - also usually includes 1 huge database
+  - microservices - each of above is a SEPARATE SINGLETARY function/service
+    - each function {that needs 1} has its own db
+  - PROBLEMS :
+    - monolith gets bloated, too hard to manage, changes in 1 frequently effect other units, dependencies
+  - MICROSERVICES :
+    - extreme form of componentialization / modularity
+    - communicate w/each other thru well-defined interfaces
+    - can be developed separately, deployed separately
+  - Communications between them done thru :
+    - REST apis
+    - message queues
+  - ideally, each microservice just deals with 1 specific piece of business functionality
+    -"Single Responsibility Principle"  {Wiki}
+  - highly cohesive
+    - each msvc should handle 1 business requirement
+    - a single set of responsibilities
+  - loosely coupled
+    - minimize dependencies between msvcs
+    - use "messaging" / REST Apis
+
+- 31. An Introduction to Microservices - Pt 2
+  - each msvc will handle its own data store
+    - can have different kinds of dbs
+  - data is spread around the system
+    - need to research different possible dbs that best support that msvc's functionality
+      - rdbms, nosql, other
+    - each called different things, utilizing different schema, technologies
+  - "Bounded Context" - Martin Fowler
+    - central pattern in domain-driven design
+    - dividing models into different bounded contexts & being explicit about their interrelationships
+
+- 32. Fleetman Microservices - setting the scene
+  - hub.docker.com : richardchesterwood repo
+  - github.com : dickchesterwood
+  - pre-built msvcs
+  - browser <-> nginx reverse proxy <-> API Gateway <-> Position Tracker <-> ActiveMQ msg q <-> Position Simulator
+  - system tracks vehicles as they move around
+    - each vehicle has a gps
+    - periodically updates its position
+    - many vehicles constantly report positions
+      - don't have actual vehicles - use a Position Simulator to provide pretend coordinates {files w/coordinates}
+      - online gps tracks providing random routes
+    - use ActiveMQ and publish/subscribe to handle random updates
+  - API Gateway
+    - single point of entry to the entire application
+    - front-end accesses API Gateway
+    - purpose : route incoming requests to the backend
+      - usually a REST call from front-end
+
+- 33. Deploying the Queue
+  - starting with the queue
+  - 1 of the easiest
+
+- 34. Deploying the Position Simulator
+  - no exposed ports needed
+  - uses environment variable
+    - in yaml file, in section labeled 'env:'
+  - churns out position messages to a queue to be consumed by position tracker
+
+  - STARTING HAVING iMac DESKTOP PERFORMANCE ISSUES HERE
+  - COULDN'T ALLOCATE SUGGESTED RAM CHANGES in SETUP instructions :-(
+
+- 35. Inspecting Pod Logs
+  - ONLY get logs from pods - NOT from services
+  - kubectl logs podName
+
+- 36. Deploying the Position Tracker
+  - see workloads.yaml
+
+- 37. Deploying the API Gateway
+  - see workloads.yaml
+
+- 38. Deploying the webapp
+  - see workloads.yaml file
+
+- COMMANDS
+   minikube service fleetman-webapp --url
+4  minikube delete
+5  minikube stop
+6  minikube start --memory 4096  {can't do this - don't have enough RAM :-( }
+15  minikube stop
+   18  minikube delete
+   19  cd
+   20  rmfr .kube/ .minikube/
+   21  dev
+   22  cd udemy_k8s_deploy_msvcs_2aws/
+   23  cd 11_Microservice_Architecture/
+   30  minikube start
+   26  kubectl apply -f services.yaml
+   27  kubectl apply -f workloads.yaml
+   28  kubectl get all
+   34  kubectl logs position-simulator-54c465565f-q2889
+   36  minikube service fleetman-queue --url
+   38  kubectl delete pod api-gateway-85944f447b-rfznl
+   39  minikube stop
+   40  minikube delete
+   41  cd
+   42  rmfr .minikube/ .kube/
+   43  dev
+   44  cd udemy_k8s_deploy_msvcs_2aws/
+   45  cd 11_Microservice_Architecture/
+   46  minikube start
+   48  kubectl apply -f workloads.yaml
+   49  kubectl apply -f services.yaml
+   50  kubectl delete pod api-gateway-85944f447b-v4cms
+   51  minikube stop
+   52  minikube delete
+   53  cd
+   54  rmfr .minikube/ .kube/

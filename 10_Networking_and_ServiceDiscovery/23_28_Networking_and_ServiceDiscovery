@@ -9,12 +9,111 @@ Section 10. Network and Service Discovery
 
 
 - 23. Networking Overview in k8s
-  - 
+  - how do we network containers ?
+    - why ? Need to have containers use each other for the services they offer, eg, java app & db
+  - docker containers designed to be a single service
+  - in k8s, if you deploy the 2 separate containers into the same Pod, then communicating is very easy
+    - the 2 containers can "see each other" using "localhost" ... BUT ...
+    - ... it is BEST PRACTICE to ONLY HAVE 1 CONTAINER PER POD
+  - harder to manage containers when failures occur and there are multiple containers in a single pod
+  - need to expose the functionality in the separate pods as 'services'
+  - services are given unique internal IP addresses to use to communicate with each other
+  - BUT each time you start up the cluster/pod, they could be given a different IP address - what to do ?
+  - K8S maintains its own private DNS service {kube-dns, runs automatically in background} that are key-value pairs
+    - keys are the names of the services
+    - values are the IP addresses
+    - containers use this internal DNS to communicate with each other and just need the 'service' KEY name
+  - k8s-specific background 'services' run in their own "namespace"
 
 - 24. Namespaces - kube-system
+  - a way of partitioning your resources in k8s into separate areas
+  - use them to separate functionality, eg front-end, back-end
+  - when creating new resources/workloads - don't specify anything, things are put into the 'default' namespace
+  - 'kubectl get namespaces' to see all of the namespaces running in a cluster
+      kubectl get namespaces {}ns
+      NAME              STATUS   AGE
+      default           Active   26m  <- defaults to here if nothing specified
+      kube-node-lease   Active   26m
+      kube-public       Active   26m
+      kube-system       Active   26m
+  - specify namespaceon cmd line to see resources in a specific ns
+  - kubectl get pods -n kube-system
+      NAME                               READY   STATUS    RESTARTS   AGE
+      coredns-f9fd979d6-m2zgb            1/1     Running   0          28m
+      etcd-minikube                      1/1     Running   0          28m
+      kube-apiserver-minikube            1/1     Running   0          28m
+      kube-controller-manager-minikube   1/1     Running   0          28m
+      kube-proxy-gprzc                   1/1     Running   0          28m
+      kube-scheduler-minikube            1/1     Running   0          28m
+      storage-provisioner                1/1     Running   0          28m
+
 - 25. Accessing MySQL from a Pod
+  - webapp container in 1 pod wants to access a db container in another pod
+    - need to look up db ip in kube-dns
+  - apply the networking-test.yaml to start up a new pod running mysql
+  - exec into a webapp shell and run a few commands to verify we can 'talk' to the mysql db container
+    - kubectl exec -it pod/webapp-77896f4bf8-ftdbd sh
+
 - 26. {Windows} Cygwin extra - fixing the terminal with winpty
+  - not applicable
+
 - 27. Service Discovery
-- 28. Fully Qualified Domain Names
+  - continued from 25 above
+  - how does the webapp container know how/where to access the mysql db container ?
+    - inside container, do a cat /etc/resolv.conf
+      - this file contains info on how DNS is going to work inside the container
+        - eg, container says 10.96.0.10
+      - from command line, do a 'kubectl get service -n kube-system'
+        - this should show the kube-dns service running on 10.96.0.10
+    - nslookup database
+      - Address 1: 10.102.175.91 database.default.svc.cluster.local
+    - from command line, do 'kubectl get service' you'll see
+      - database          ClusterIP   10.102.175.91
+    - in client, need to install mysql client before we can 'talk' to the MySQL db in the other container
+      - apk update
+      - apk install mysql-client
+      - using the names from the yaml file,
+        - mysql -h database -uroot -ppassword fleetman
+        - connects successfully, ie, webapp container connected to MySQL db container
+        - MySQL [fleetman]> create table testtable (test varchar(255));
+              Query OK, 0 rows affected (0.03 sec)
+
+              MySQL [fleetman]> show tables;
+              +--------------------+
+              | Tables_in_fleetman |
+              +--------------------+
+              | testtable          |
+              +--------------------+
+              1 row in set (0.00 sec)
+  - using this procedure of "finding" the services we wish to talk to by using their name, this is 'Service Discovery'
+
+- 28. Fully Qualified Domain Names {FQDN}
+  - nslookup database ; returns an IP address
+  - Address 1: 10.102.175.91 database.default.svc.cluster.local
+  - not registered as simply 'database' but as its FQDN : database.default.svc.cluster.local
+  - in /etc/resolv.conf is this :
+    - search default.svc.cluster.local svc.cluster.local cluster.local
+  - what happens is if nslookup can't find 'database' it starts appending each of the 'search' qualifiers and searching for those
+  - 'default' <- namespace service is in
+    - if you know it is in 1 of these, no need to specify on cmd line
+      - if in another, you'll need to specify the FQDN
 
 - COMMANDS
+   minikube service fleetman-webapp --url
+4  minikube delete
+5  minikube stop
+6  minikube start
+9  kubectl apply -f services.yaml
+10  kubectl apply -f pods.yaml
+14  kubectl get all
+15  kubectl get namespaces
+16  kubectl get pods -n kube-system
+17  kubectl get all -n kube-system
+18  kubectl get all -n kube-public
+19  kubectl describe svc kube-dns -n kube-system
+20  dlogin
+21  docker search mysql
+23  kubectl apply -f networking-tests.yaml
+31  kubectl logs mysql
+32  kubectl exec -it pod/webapp-77896f4bf8-ftdbd sh
+- pick up on above sections to see commands that were executed inside the webapp container

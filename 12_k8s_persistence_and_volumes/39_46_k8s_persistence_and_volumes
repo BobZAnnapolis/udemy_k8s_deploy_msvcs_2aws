@@ -1,0 +1,15 @@
+Section 12. K8S Persistence and Volumes
+
+- 39. Persistence
+  - 
+
+- 40. Upgrading to a Mongo DB
+- 41. Mongo Service
+- 42. Expanding the MiniKube VM
+- 43. Volume Mounts
+- 44. Volumes
+- 45. Persistent Volume Claims
+- 46. Storage Classes and Bindings
+
+- COMMANDS
+   minikube service fleetman-webapp --url
