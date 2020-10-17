@@ -1,15 +1,100 @@
 Section 12. K8S Persistence and Volumes
 
 - 39. Persistence
-  - 
+  - when a pod is destroyed, all data inside that pod is lost
+  - need persistence in order to save any data
+    - can be a drive on the node, if node goes down, this is lost as well, or,
+    - cloud options, AWS S3, Elastic Block Storage, etc
+  - version 2 of the app stores the routes in memory
+    - restarting the app - they will all be deleted
+    - additional problem - will run out of memory - service will crash
+  - need to design all services are resilient to failure
+    - pods, nodes can crash at any time
+  - Position Tracker using local memory
+    - goes away on crash, restarts, etc
+    - need to start saving data in a db .... next section
 
 - 40. Upgrading to a Mongo DB
+  - new mongo-stack.yaml
+    - only used w/Position Tracker service
+  - apply the workloads yaml 1st w/kust the Position Tracker release updated to 3 ... then ...
+    - do a kubectl logs -f position-tracker
+      - because the db service has NOT been created yet - should see endless log crashes
+  - initial mongo-stack0 creates the pod but no associated mongodb service
+    - mongo pod logs indicate waiting for a mongodb connection
+    - need to create the service .... next section
+
 - 41. Mongo Service
+  - version mongo-stack1 creates the service
+  - volumes coming later
+  - using a ClusterIP cuz do NOT need to make it available outside cluster
+  - course said it was operating sluggishly on his machine
+    - same for me, need to improve performance by modifying MiniKube VM, next section
+
 - 42. Expanding the MiniKube VM
+  - teacher uses VirtualBox, i do not
+  - can't increase my local RAM but only a few more chapters before we move to the cloud
+  - hopefully my machine will hold on til then
+    - JUST FOUND OUT - i'm running inside Docker Desktop - which defaults to 1 GB - increased to 4 GB - seems better
+  - restarting, moving on to ....
+
 - 43. Volume Mounts
+  - data now being stored in Position Tracker mongodb
+  - if it crashes - will start up and have the existing data
+  - it does - but PROBLEM exists - if MONGO POD is destroyed - all data is lost :-(
+  - mongo-stack.yaml has volume mounts to save the data locally
+    - so in case the pod goes away, when it restarts - it will remount that local db & data restored
+  - still have a PROBLEM tho
+    - volume mount exists on 1 machine - if that machine dies - data is lost forever
+  - need to come up with a better solution
+  - Persistent Volumes & Persistent Volume Claims
+    - whole topic is complicated
+    - for this chapter / class - just want to save the data outside of the pod, on a local drive location
+  - eventual AWS Cloud solution will be EBS volumes
+  - k8s supports all of these options
+    - yaml options
+  - volumeMounts tag allows for this
+  - depending on local pod storage option being used - NEED TO SPECIFY WHERE LOCAL POD DB DATA IS BEING STORED
+  - and then you have to specify where on the local machine you want to keep it
+    - this is done by specifying VOLUMES .... next section ...
+
 - 44. Volumes
+  - in spec section, define a new 'volumes' section
+  - specify the volumeMounts defined previously
+  - see official spec for correct syntax
+  - for this chapter, we're going to use host path / folder on the machine running this pod
+  - COULD NOT GET LOCAL STORAGE TO WORK :-(
+  - if the Position Simulator fails / restarts :
+    - will start back from beginning
+
 - 45. Persistent Volume Claims
+  - this is a way to get around hard-coding of the external volume to be accessed
+  - use this tag in the yaml
+  - use a claimName
+    - create a new storage.yaml file that is specific to the target cloud environment
+
 - 46. Storage Classes and Bindings
+  - links persistentVolumeClaims and persistentVolumes
+  - used to set up different kinds of storage technologies
+    - different keywords
+  - binding : k8s searches across cluster for matching key-value pairs to synch everything
 
 - COMMANDS
+   dlogin
    minikube service fleetman-webapp --url
+   - modified Docker Desktop to have 8GB
+  cd
+  rmfr .kube/ .minikube/
+  dev
+  cd udemy_k8s_deploy_msvcs_2aws/12_k8s_persistence_and_volumes/
+  lsa
+  minikube start --memory 7966
+  kubectl apply -f .
+  kubectl describe pod/mongodb-6f98dc97cf-mtvcw
+  kubectl apply -f storage.yaml
+  kubectl describe pod/mongodb-6f98dc97cf-mtvcw
+  kubectl get pv
+  minikube stop
+  minikube delete
+  cd
+  rmfr .minikube/ .kube/
