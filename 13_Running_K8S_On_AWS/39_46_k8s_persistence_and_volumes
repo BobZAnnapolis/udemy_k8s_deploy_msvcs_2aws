@@ -1,0 +1,107 @@
+Section 13. Running K8S on the AWS Cloud
+
+- 47. Warning {section just about AWS costs}
+- 48. Getting Started with AWS
+  - create an account
+  - up to now, been using MiniKube locally to test out functionality
+    - good way to handle small set of microservices
+  - when 'going into production' in a cloud environment
+    - will create several "nodes"
+    - nodes : separate EC2 instances {a 'server' in the cloud}
+  - typically in K8S, you have several nodes making up a cluster
+  - advantages
+    - nodes don't have to be big
+    - separate functionality {ie msvcs} onto separate nodes
+  - in K8S - have 1/+ "MASTER NODES"
+    - by default, will determine {'schedule'} which msvcs go on the rest of the nodes
+    - can specify, but typically don't
+    - in YAML, can specify how many 'pods'/msvcs are running AND
+      - for MAJOR COMPONENT msvcs, can make sure multiple copies run on different NODES
+  - Persistent Volumes available on AWS
+    - EBS - virtual hard drives - elastic block storage
+      - create & "link" together to pods
+  - for this course
+    - setting up 4 nodes
+      - 1 MASTER
+      - 3 WORKER nodes - main job is to run the pods/msvcs
+
+- 49. Managing a Cluster in the Cloud
+  - MASTER : runs the whole show
+    - kubectl from here
+  - WORKERS : run the pods / msvcs
+  - on bare metal, would have to create everything from scratch
+    - AWS - has a lot of built-in tools to do all the background provisioning
+  - lot of tools do this
+    - KOPS
+    - EKS
+  - KOPS
+    - older, looks like it is deprecated
+    - part of kubernetes
+    - github.com/kubernetes/kops
+  - EKS
+    - part of AWS
+  - both work for instructor
+  - not many differences ... but ...
+    - KOPS
+      - USER IS RESPONSIBLE FOR MANAGING THE MASTER NODE
+      - MASTER NODE appears in your cluster, you can select it and do stuff on it
+      - adds responsibilities onto SA
+    - EKS
+      - USER NEVER SEES THE MASTER NODE- run by AWS - can't do anything w/it
+      - advantage : less to worry about
+
+- 50. EKS vs KOPS - Which to Choose
+  - KOPS
+    - PROS
+      - well respected, heavily used {July 2020}
+      - easy to use
+    - CONS
+      - responsible for managing the Master
+      - you will have to dedicate time to handling issues occurring on it
+      - usually only get 1 MASTER normally {ways to do it}
+      - "feels" like more work than EKS
+  - EKS
+    - PROS
+      - Amazon-hosted version of k8s
+      - handles MASTER node{s} for you
+      - gained a LOT of ground / popularity
+      - eksctl tool : quite simple to use
+      - INTEGRATES EASILY FOR AWS FARGATE
+        - server-less service
+    - CONS
+      - need a 3rd party tool : eksctl
+      - GUI poor {as of July 2020}
+      - might "feel" like you are tied to AWS
+        - NOT true - as long as you have the YAML - can go anywhere
+          - eg, Google Cloud Platform, Microsoft Azure
+
+- 51. Pricing Differences
+  - still going to need the same number of worker nodes
+  - CONTROL PLANE
+    - MASTER, LOAD BALANCER,
+  - KOPS
+    - COST
+      - Depends on Node 'instance type'
+        - use monitoring system to determine if need more / less resources
+      - eg, m3.medium is popular choice - @$600/year
+      - @$800 year for a single Master Control Plane
+        - also have to pay for Worker Nodes
+  - EKS
+    - COST
+      - set fee for entire Control Plane because AWS handles it for you
+      - set fees for clusters as well
+      - @$876 / year
+      - provides multiple Masters for you - resiliency - handles failover for you
+      - significant savings if you need multiple masters
+  - ALWAYS CHECK CURRENT PRICING
+
+- 52. Choose Your Own Adventure
+  - If you've decided to go with Kops, then proceed to the next section!
+  - If you've decided to go with EKS, then skip the next section and instead watch "EKS - Running on the Kubernetes Cloud".
+  - If you want to study both, I recommend you pick one first, go through the full process of deploying fleetman to it,
+    then DELETE the cluster and run through the process with the alternative option. It's all good fun!
+  - For those who are only doing one option but need a certificate of completion - just click the checkboxes
+    alongside the videos to mark that you've completed them without watching.
+
+- COMMANDS
+   dlogin
