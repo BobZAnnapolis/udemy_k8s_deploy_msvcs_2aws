@@ -1,13 +1,205 @@
 Section 16. Operating your Cluster
 
 - 65. This section is for both EKS & KOPS
-  - 
-
 - 66. Provisioning SSD drives with a Storage Class
+  - using storage-aws.yaml file from ch 13
+  - see commands below
+
 - 67. Warning : Problems with AWS Load Balancers
+  - June 2020:
+  - We've discovered that if you're running on a 3g or 4g mobile connection, you may not see vehicles moving
+    on the application. This is due to some mobile operators using proxies which break the websocket
+    technology we use on this application.
+  - For more details, read here: https://stackoverflow.com/questions/5557776/websockets-over-a-3g-connection
+  - We have two workarounds for this:
+    - A: if you have access to a VPN, enable it and this will hide the traffic type from your mobile operator!
+    - B: You can visit the Node directly without using a loadbalancer - for some reason this avoids the problem.
+  - In the EC2 console, find one of your worker nodes (any of the three will do), and select it.
+  - On the Description tab at the bottom, find the entry for "Security Groups", and click the link
+  - Edit the inbound rules, and add an entry for "Custom TCP", port "30080", and source "Anywhere". Save the rules.
+  - Now find the IP address of any of the worker nodes - any of the three will do.
+  - Now visit that IP:30080 - you should now see the working application.
+  - This approach, using a NodePort, is definitely not production standard but it will allow you to test your cluster.
+
 - 68. Deploying Fleetman Workload to k8s
+  - services.yaml file
+    - webapp
+      - removed NodePort
+      - change type LoadBalancer
+    - queue
+      - remove NodePort
+      - change type to ClusterIP
+    - API Gatewat
+      - remove NodePort
+      - change type ClusterIP
+  - kubectl apply -f .
+  - kubectl get all
+  - do a few kubectl logs -f .
+    - make sure no errors
+    - when all running
+      - on AWS console - go to LoadBalancers page
+      - get desciption - copy DNS Name into browser and voila - up & running !!!!
+
 - 69. Setting Up A Domain Name
+  - register a domain name and use this DNS to make a better / easier URL to access
+
 - 70. Surviving Node Failure
+  - REQUIREMENT :
+    - Even in the event of any Node (or Availability Zone) failure, the web site MUST still be accessible
+    - It doesn't matter if reports from vehicles stopped coming in, as long as service is restored w/in a few minutes
+  - have 6 pods running, how do you know which nodes they are running on
+    - kubectl get pods -o wide
+  - get the node IP that the webapp is on
+    - go to AWS console - terminate - YIKES !!!!
+  - front-end will hang
+    - the pod will eventually be created somewhere elsebut while that is happening ....
+      ... front-end will not respond - this is against our requirement
+  - AWS check AUTO-SCALING GROUP
+    - can see old node being terminated, then another one being created
+    - kubectl get nodes
+      - can see a new one has been stood up very recently
+  - NOTE : pods may be unbalanced now among existing nodes
+    - need additional tags , functionality in order to get this to work
+
 - 71. Replacing Pods in k8s
+  - change replicas to 2/3
+  - kubectl get pods -o wide
+    - verify webapp is now running on different nodes so front-end "should" now not have any delay
+  - by careful use of replicas we can make the system is more resilient
+  - Amazon MQ
+    - AWS version of ActiveMQ
+    - use AWS service and you can get rid of the internal ActiveMQ
+      - PROBLEM: Relying on AWS version for functionality
+  - same thing for AWS DBs - use providers version instead of our own
+    - tradeoffs
 
 Commands
+1  cd; eksctl utils describe-stacks --cluster fleetman
+2  kubectl get all
+3  rmfr flletman
+6  mkdir fleetman
+7  cd fleetman/
+8  vi storage-aws.yaml
+13 kubectl apply -f storage-aws.yaml
+14 kubectl get pvc
+15 kubectl get pv
+16 vi mongo-stack.yaml
+17 kubectl apply -f mongo-stack.yaml
+19 kubectl get all
+20 kubectl describe pod/mongodb-7dc4596644-fsz6h
+Name:         mongodb-7dc4596644-fsz6h
+Namespace:    default
+Priority:     0
+Node:         ip-192-168-3-110.ec2.internal/192.168.3.110
+Start Time:   Mon, 19 Oct 2020 16:33:00 +0000
+Labels:       app=mongodb
+              pod-template-hash=7dc4596644
+Annotations:  kubernetes.io/psp: eks.privileged
+Status:       Running
+IP:           192.168.28.172
+IPs:
+  IP:           192.168.28.172
+Controlled By:  ReplicaSet/mongodb-7dc4596644
+Containers:
+  mongodb:
+    Container ID:   docker://03be06a633a362f46d5f684e2add694d14d128100f41dcf92f784f6a1ce047a9
+    Image:          mongo:3.6.5-jessie
+    Image ID:       docker-pullable://mongo@sha256:3e00936a4fbd17003cfd33ca808f03ada736134774bfbc3069d3757905a4a326
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Mon, 19 Oct 2020 16:33:19 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /data/db from mongo-persistent-storage (rw)
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-6hcs8 (ro)
+Conditions:
+  Type              Status
+  Initialized       True
+  Ready             True
+  ContainersReady   True
+  PodScheduled      True
+Volumes:
+  mongo-persistent-storage:
+    Type:       PersistentVolumeClaim (a reference to a PersistentVolumeClaim in the same namespace)
+    ClaimName:  mongo-pvc
+    ReadOnly:   false
+  default-token-6hcs8:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  default-token-6hcs8
+    Optional:    false
+QoS Class:       BestEffort
+Node-Selectors:  <none>
+Tolerations:     node.kubernetes.io/not-ready:NoExecute for 300s
+                 node.kubernetes.io/unreachable:NoExecute for 300s
+Events:          <none>
+
+23 kubectl logs -f mongodb-7dc4596644-fsz6h
+24 vi workloads.yaml
+25 vi services.yaml
+26 kubectl apply -f .
+28 kubectl logs -f pod/position-tracker-65cff5b766-g7hbv
+29 kubectl get all
+NAME                                      READY   STATUS    RESTARTS   AGE
+pod/api-gateway-7ff5cd988d-nsl6c          1/1     Running   0          76s
+pod/mongodb-7dc4596644-fsz6h              1/1     Running   0          9m6s
+pod/position-simulator-58d495886c-frftd   1/1     Running   0          76s
+pod/position-tracker-65cff5b766-g7hbv     1/1     Running   0          76s
+pod/queue-577c5fccf4-4xzpz                1/1     Running   0          76s
+pod/webapp-785d5b86bf-shnrw               1/1     Running   0          76s
+
+NAME                                TYPE           CLUSTER-IP       EXTERNAL-IP                                                               PORT(S)              AGE
+service/fleetman-api-gateway        ClusterIP      10.100.198.133   <none>                                                                    8080/TCP             76s
+service/fleetman-mongodb            ClusterIP      10.100.168.42    <none>                                                                    27017/TCP            9m6s
+service/fleetman-position-tracker   ClusterIP      10.100.244.65    <none>                                                                    8080/TCP             76s
+service/fleetman-queue              ClusterIP      10.100.217.230   <none>                                                                    8161/TCP,61616/TCP   76s
+service/fleetman-webapp             LoadBalancer   10.100.150.153   a744becb6e39d4674b0cf834bb2b9e20-1638342838.us-east-1.elb.amazonaws.com   80:30311/TCP         76s
+service/kubernetes                  ClusterIP      10.100.0.1       <none>                                                                    443/TCP              97m
+
+NAME                                 READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/api-gateway          1/1     1            1           76s
+deployment.apps/mongodb              1/1     1            1           9m6s
+deployment.apps/position-simulator   1/1     1            1           76s
+deployment.apps/position-tracker     1/1     1            1           76s
+deployment.apps/queue                1/1     1            1           76s
+deployment.apps/webapp               1/1     1            1           76s
+
+NAME                                            DESIRED   CURRENT   READY   AGE
+replicaset.apps/api-gateway-7ff5cd988d          1         1         1       76s
+replicaset.apps/mongodb-7dc4596644              1         1         1       9m6s
+replicaset.apps/position-simulator-58d495886c   1         1         1       76s
+replicaset.apps/position-tracker-65cff5b766     1         1         1       76s
+replicaset.apps/queue-577c5fccf4                1         1         1       76s
+replicaset.apps/webapp-785d5b86bf               1         1         1       76s
+
+30 kubectl get pods
+NAME                                  READY   STATUS    RESTARTS   AGE
+api-gateway-7ff5cd988d-nsl6c          1/1     Running   0          15m
+mongodb-7dc4596644-fsz6h              1/1     Running   0          23m
+position-simulator-58d495886c-frftd   1/1     Running   0          15m
+position-tracker-65cff5b766-g7hbv     1/1     Running   0          15m
+queue-577c5fccf4-4xzpz                1/1     Running   0          15m
+webapp-785d5b86bf-shnrw               1/1     Running   0          15m
+
+31 kubectl get pods -o wide  {can see they are on different nodes}
+NAME                                  READY   STATUS    RESTARTS   AGE   IP               NODE                             NOMINATED NODE   READINESS GATES
+api-gateway-7ff5cd988d-nsl6c          1/1     Running   0          15m   192.168.15.198   ip-192-168-3-110.ec2.internal    <none>           <none>
+mongodb-7dc4596644-fsz6h              1/1     Running   0          23m   192.168.28.172   ip-192-168-3-110.ec2.internal    <none>           <none>
+position-simulator-58d495886c-frftd   1/1     Running   0          15m   192.168.18.0     ip-192-168-11-111.ec2.internal   <none>           <none>
+position-tracker-65cff5b766-g7hbv     1/1     Running   0          15m   192.168.39.169   ip-192-168-60-10.ec2.internal    <none>           <none>
+queue-577c5fccf4-4xzpz                1/1     Running   0          15m   192.168.8.114    ip-192-168-3-110.ec2.internal    <none>           <none>
+webapp-785d5b86bf-shnrw               1/1     Running   0          15m   192.168.1.168    ip-192-168-11-111.ec2.internal   <none>           <none>
+
+
+[ec2-user@ip-172-31-25-176 fleetman]$ kubectl get pods -o wide
+NAME                                  READY   STATUS    RESTARTS   AGE   IP               NODE                             NOMINATED NODE   READINESS GATES
+api-gateway-7ff5cd988d-nsl6c          1/1     Running   0          81m   192.168.15.198   ip-192-168-3-110.ec2.internal    <none>           <none>
+mongodb-7dc4596644-fsz6h              1/1     Running   0          89m   192.168.28.172   ip-192-168-3-110.ec2.internal    <none>           <none>
+position-simulator-58d495886c-jx6c7   1/1     Running   0          11m   192.168.35.122   ip-192-168-60-10.ec2.internal    <none>           <none>
+position-tracker-65cff5b766-g7hbv     1/1     Running   0          81m   192.168.39.169   ip-192-168-60-10.ec2.internal    <none>           <none>
+queue-577c5fccf4-4xzpz                1/1     Running   0          81m   192.168.8.114    ip-192-168-3-110.ec2.internal    <none>           <none>
+webapp-785d5b86bf-28sp4               1/1     Running   0          32s   192.168.53.249   ip-192-168-43-127.ec2.internal   <none>           <none>
+webapp-785d5b86bf-5487v               1/1     Running   0          11m   192.168.11.7     ip-192-168-3-110.ec2.internal    <none>           <none>
+webapp-785d5b86bf-p646h               1/1     Running   0          32s   192.168.46.29    ip-192-168-60-10.ec2.internal    <none>           <none>
