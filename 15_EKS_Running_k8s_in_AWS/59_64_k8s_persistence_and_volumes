@@ -1,0 +1,225 @@
+Section 15. EKS Running K8S In The AWS CLoud
+
+- 59. This section is for EKS {just text}
+- 60. Getting Started with EKS
+  - Built-in to AWS
+  - log in, make sure your region is close to you
+  - search for "EKS"
+  - Documentation -> Cluster Management -> eksctl
+    - has its own github repo
+    - can do it using MAC OS homebrew ... BUT ...
+      - will install it up on an AWS EC2 instance
+      - run thru steps - accepting mostly default
+        - launch instance
+        - AMI 2
+        - add tag name -> Bootstrap
+        - next -> Configure Security Groups
+          - can keep Source at Custom 0.0.0.0 -> but that allows any machine anywhere to SSH to it {AWS warns against this}
+          - change Source to My IP
+            - WARNING : ISP might change this daily - need to reset this if so
+        - use KeyPair  {permissions need to be set accordingly}
+        - launch instance
+        - once running, 'ssh -i KeyPair ec2-user@public ip'
+        - verify you are logged in
+
+- 61. Install eksctl and AWS CLI
+  - install the tools on the EC2 instance
+    - easier than modifying your home machine
+  - ssh in
+  - from ch 13 - reference install-eks.txt file for commands
+  - by using the EC2, AWS CLI already installed
+  - update to aws v2.0 using cmds from file
+
+- 62. Configure the AWS Credentials
+  - follow along in file
+
+- 63. Install kubectl
+  - kubectl HAS to match version of k8s running on cluster
+  - what is current default version of k8s running in EKS
+    - go to EKS service
+    - give it a name - next step
+      - next step lists the version
+
+- 64. Start the Cluster
+  - rest of the commands get done on EC2 - see below
+
+- COMMANDS
+1  sudo yum update
+6  curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+8  sudo mv /tmp/eksctl /usr/local/bin
+9  eksctl
+10  eksctl version
+14  aws --version
+15  curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+16  unzip awscliv2.zip
+17  sudo ./aws/install
+18  /usr/local/bin/aws --version
+19  exit
+20  aws --version
+22  aws eks list-clusters
+23  aws configure
+24  aws eks list-clusters
+25  export RELEASE=1.17.0
+26  curl -LO https://storage.googleapis.com/kubernetes-release/release/v$RELEASE/bin/linux/amd64/kubectl
+28  chmod +x ./kubectl
+29  sudo mv ./kubectl /usr/local/bin/kubectl
+33  kubectl version
+34  which kubectl
+35  kubectl version
+36  kubectl version --client
+43  eksctl create cluster --name fleetman --nodes-min=3
+45  kubectl get all
+51  eksctl utils describe-stacks --cluster fleetman
+[ℹ]  eksctl version 0.30.0
+[ℹ]  using region us-east-1
+[ℹ]  stack/eksctl-fleetman-nodegroup-ng-de720612 = {
+  Capabilities: ["CAPABILITY_IAM"],
+  CreationTime: 2020-10-19 15:08:28.129 +0000 UTC,
+  Description: "EKS nodes (AMI family: AmazonLinux2, SSH access: false, private networking: false) [created and managed by eksctl]",
+  DisableRollback: false,
+  DriftInformation: {
+    StackDriftStatus: "NOT_CHECKED"
+  },
+  EnableTerminationProtection: false,
+  Outputs: [
+    {
+      OutputKey: "FeaturePrivateNetworking",
+      OutputValue: "false"
+    },
+    {
+      ExportName: "eksctl-fleetman-nodegroup-ng-de720612::InstanceRoleARN",
+      OutputKey: "InstanceRoleARN",
+      OutputValue: "arn:aws:iam::762069386993:role/eksctl-fleetman-nodegroup-ng-de72-NodeInstanceRole-OFYCF60IPYBW"
+    },
+    {
+      OutputKey: "FeatureLocalSecurityGroup",
+      OutputValue: "true"
+    },
+    {
+      ExportName: "eksctl-fleetman-nodegroup-ng-de720612::InstanceProfileARN",
+      OutputKey: "InstanceProfileARN",
+      OutputValue: "arn:aws:iam::762069386993:instance-profile/eksctl-fleetman-nodegroup-ng-de720612-NodeInstanceProfile-4VULM8G3I1KL"
+    },
+    {
+      OutputKey: "FeatureSharedSecurityGroup",
+      OutputValue: "true"
+    }
+  ],
+  RollbackConfiguration: {
+
+  },
+  StackId: "arn:aws:cloudformation:us-east-1:762069386993:stack/eksctl-fleetman-nodegroup-ng-de720612/f134b680-121c-11eb-9566-0af655d326e7",
+  StackName: "eksctl-fleetman-nodegroup-ng-de720612",
+  StackStatus: "CREATE_COMPLETE",
+  Tags: [
+    {
+      Key: "alpha.eksctl.io/cluster-name",
+      Value: "fleetman"
+    },
+    {
+      Key: "alpha.eksctl.io/nodegroup-name",
+      Value: "ng-de720612"
+    },
+    {
+      Key: "eksctl.cluster.k8s.io/v1alpha1/cluster-name",
+      Value: "fleetman"
+    },
+    {
+      Key: "alpha.eksctl.io/nodegroup-type",
+      Value: "unmanaged"
+    },
+    {
+      Key: "alpha.eksctl.io/eksctl-version",
+      Value: "0.30.0"
+    },
+    {
+      Key: "eksctl.io/v1alpha2/nodegroup-name",
+      Value: "ng-de720612"
+    }
+  ]
+}
+[ℹ]  stack/eksctl-fleetman-cluster = {
+  Capabilities: ["CAPABILITY_IAM"],
+  CreationTime: 2020-10-19 14:54:15.563 +0000 UTC,
+  Description: "EKS cluster (dedicated VPC: true, dedicated IAM: true) [created and managed by eksctl]",
+  DisableRollback: false,
+  DriftInformation: {
+    StackDriftStatus: "NOT_CHECKED"
+  },
+  EnableTerminationProtection: false,
+  Outputs: [
+    {
+      ExportName: "eksctl-fleetman-cluster::SubnetsPrivate",
+      OutputKey: "SubnetsPrivate",
+      OutputValue: "subnet-0ab987a44740fe803,subnet-0e36a51db77e48a9f"
+    },
+    {
+      ExportName: "eksctl-fleetman-cluster::SubnetsPublic",
+      OutputKey: "SubnetsPublic",
+      OutputValue: "subnet-0430d2008b8a19471,subnet-0295138b9717219e6"
+    },
+    {
+      OutputKey: "FeatureNATMode",
+      OutputValue: "Single"
+    },
+    {
+      ExportName: "eksctl-fleetman-cluster::ServiceRoleARN",
+      OutputKey: "ServiceRoleARN",
+      OutputValue: "arn:aws:iam::762069386993:role/eksctl-fleetman-cluster-ServiceRole-17HUZRDRUG8YE"
+    },
+    {
+      ExportName: "eksctl-fleetman-cluster::Endpoint",
+      OutputKey: "Endpoint",
+      OutputValue: "https://42842DF9EE9091F835453E5490716BC4.gr7.us-east-1.eks.amazonaws.com"
+    },
+    {
+      ExportName: "eksctl-fleetman-cluster::SharedNodeSecurityGroup",
+      OutputKey: "SharedNodeSecurityGroup",
+      OutputValue: "sg-0db514707558dbd4f"
+    },
+    {
+      ExportName: "eksctl-fleetman-cluster::VPC",
+      OutputKey: "VPC",
+      OutputValue: "vpc-0538be533017ceab1"
+    },
+    {
+      ExportName: "eksctl-fleetman-cluster::ClusterSecurityGroupId",
+      OutputKey: "ClusterSecurityGroupId",
+      OutputValue: "sg-03a8da73c1f07d810"
+    },
+    {
+      OutputKey: "ClusterStackName",
+      OutputValue: "eksctl-fleetman-cluster"
+    },
+    {
+      OutputKey: "CertificateAuthorityData",
+      OutputValue: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUN5RENDQWJDZ0F3SUJBZ0lCQURBTkJna3Foa2lHOXcwQkFRc0ZBREFWTVJNd0VRWURWUVFERXdwcmRXSmwKY201bGRHVnpNQjRYRFRJd01UQXhPVEUxTURNek9Wb1hEVE13TVRBeE56RTFNRE16T1Zvd0ZURVRNQkVHQTFVRQpBeE1LYTNWaVpYSnVaWFJsY3pDQ0FTSXdEUVlKS29aSWh2Y05BUUVCQlFBRGdnRVBBRENDQVFvQ2dnRUJBTy9JCmRrRjFSVEM0a05yWlFheEhXMVdqcmx5OUZMdi9TQ3FZcG5GQ1plRmRlV2U0TFRrODNoeTcvNHQvL3JsUlkreUcKTS9zdkRwc3dkTzNVZG5xL0l6aURyOVB2dVRuQWVyNnk5akxuMUg0bU1zK2ViQzEvbFpPSWhRZ0p4bVBIQzdZZQpwZUUzZFB5ZjdzeVZGcTFHcEo4SktJWlJBeWFBd0o5TEFZbjdwSzdWOWhGN1RwekVLdS9iMlBsMFpKQ3BPUXliClJDV01WNWdTSi9CVjN5QWdURkJZOER2WDVXNm53aHFBL1VWcjRkWnBqMVByNHg1ckZ5RG9UVzhSclZhTkttZ2MKK2x2akwyQXN3aVF3RzVqb253aUIxcnYrNjJPcXMxbDc3Y3kvSjN4YXZyWndyNUF5R3ZIaDV1RDVNQWY1M09CQQo1V2Q3VlVMdmVJRTZFc0IwazlFQ0F3RUFBYU1qTUNFd0RnWURWUjBQQVFIL0JBUURBZ0trTUE4R0ExVWRFd0VCCi93UUZNQU1CQWY4d0RRWUpLb1pJaHZjTkFRRUxCUUFEZ2dFQkFGOGR6d2w2S1k4RjVhWW1NdHY0bmFxTmJIOFIKZEFIdzlHd3FsbnBCZzFYVWthOHN1VW9yK1RjYVlaV1hETENHeDZWWklxc2dJZlpJWm5DckFmbU5WMGpSQ3JVNApQTTREZXVFQk4zS1dlenMrbW5nbm9GeWVWVXN6MUE0eFVETGkwQjgzNlJJWlRVZ2xHZjlBN1VDNEFyMWN1OU1kCnJzYkFoUHRZOFBsMFpPVUlwUnVQc25rSkRaU1kxMGtna1BOdjRWWFh1VkF5NHErdTJhME1aditsbi80blVvNnEKenkrSldWeTR6ZWJaM3B1cXIvVWRMOVB4N3ZReE1TK2pEd0tKR1ViQXVxeEhzSE5DaHgxQ3M1c0FwWEhpclF0bQpKdFFDTUZucS8wZnhxdmZMQ1VqOHFIblFKRytqcW95RHdKS3dGdFE5TG5lblUxY1Eyc1ZMd3h5eVpmUT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo="
+    },
+    {
+      ExportName: "eksctl-fleetman-cluster::SecurityGroup",
+      OutputKey: "SecurityGroup",
+      OutputValue: "sg-0195056594ccd8131"
+    },
+    {
+      ExportName: "eksctl-fleetman-cluster::ARN",
+      OutputKey: "ARN",
+      OutputValue: "arn:aws:eks:us-east-1:762069386993:cluster/fleetman"
+    }
+  ],
+  RollbackConfiguration: {
+
+  },
+  StackId: "arn:aws:cloudformation:us-east-1:762069386993:stack/eksctl-fleetman-cluster/f4f7c3e0-121a-11eb-b608-120fbf0f0187",
+  StackName: "eksctl-fleetman-cluster",
+  StackStatus: "CREATE_COMPLETE",
+  Tags: [{
+      Key: "alpha.eksctl.io/cluster-name",
+      Value: "fleetman"
+    },{
+      Key: "eksctl.cluster.k8s.io/v1alpha1/cluster-name",
+      Value: "fleetman"
+    },{
+      Key: "alpha.eksctl.io/eksctl-version",
+      Value: "0.30.0"
+    }]
+}

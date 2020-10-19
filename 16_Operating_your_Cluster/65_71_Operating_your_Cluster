@@ -1,0 +1,13 @@
+Section 16. Operating your Cluster
+
+- 65. This section is for both EKS & KOPS
+  - 
+
+- 66. Provisioning SSD drives with a Storage Class
+- 67. Warning : Problems with AWS Load Balancers
+- 68. Deploying Fleetman Workload to k8s
+- 69. Setting Up A Domain Name
+- 70. Surviving Node Failure
+- 71. Replacing Pods in k8s
+
+Commands
