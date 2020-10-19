@@ -1,6 +1,14 @@
 Section 18. Deleting the Cluster in EKS
 
 - 74. How to delete your EKS Cluster
-  - 
+  - eksctl delete cluster fleetman  {takes a while}
+  - check things got deleted
+    - LoadBalancer
+    - EC2 instances being terminated
+    - EKS link
+      - make sure created cluster is gone
+    - VOLUME will NOT be deleted
+      - have to do this MANUALLY !! 
 
 Commands
+- eksctl delete cluster fleetman
