@@ -1,14 +1,135 @@
-20. Logging a Kubernetes Cluster 
+20. Logging a Kubernetes Cluster
 
 - 76. Introducing the ELK / ElasticStack
-  - 
+  - tend to use "kubectl logs -f" while standing up new services etc
+    - look for errors, cfg issues, etc, on-demand emergency monitoring
+  - once its up, usually ignore
+  - need to look for any errors occurring on any pod anywhere
+  - currently - this cfg - all logs are inside each pod
+    - and they are ephemeral
+    - ie, if it goes down, restarted, etc - all that information is gone
+  - most common solution for distributed logging
+    - ELK Stack
+      - ie Elastic Stack
+      - called a stack cuz we're using multiple components to gather logs
+        - {L} LOGSTASH/FLUENTD - another container on each node - used to collect the logs from that node/containers/pods
+          - gathers all the logfiles on that node - this is all it does, just gathers, doesn't store them or do stats
+        - {E} ElasticSearch - distributed search and analytics engine
+          - can store any data you like
+          - you can query it
+          - ie, implementation of a search engine
+          - L sends logs to E
+        - {K} Kibana - visualize your ElasticSearch data
+          - easy way to set up graphs, charts, analysis of logs
+    - Docker containers exist for all of these components
+    - FLUENTD - needs to be installed on all nodes
+    - where are we going to install {E} & {K} ?
+      - can be anywhere ?
+      - some cloud providers provide the services
+        - eg, AWS provides {E}lasticSearch
+      - {K}ibana can also go anywhere
+    - depends on your architecture needs, etc
+  - {L} & {E}lasticSearch have to be running constantly in order to be constantly collecting / storing the logs
+    - ie, needs to have multiple pods running on the existing cluster
+      - keep in mind "overloading"
 
-- 77. Installing the stack to k8s 
+- 77. Installing the stack to k8s
+  - official k8s github page
+  - cluster add-ons list has ELK stack info, among other things
+  - teacher used these
+  - copy the files up to EC2
+  - kubectl apply -f elasticsearch.yaml & fluentd0cfg.yaml
+  - do a kubectl get po
+    - nothing shows up - why ?
+  - installed in the k8s system namespace
+
 - 78. Kibana - first look
+  - data in general
+  - used for logs in this course
+
 - 79. Setting Filters & Refreshes
+  -
+
 - 80. Demo : analysing a system failure
 - 81. Kibana Dashboards
 
 
 COMMANDS
+ssh -i ec2-user@ip
+cd fleetman
+eksctl create cluster --name fleetman --nodes-min=3
+kubectl apply -f .
+kubectl logs -f position-simulator-58d495886c-q7mtw
+kubectl get po -o wide
+NAME                                  READY   STATUS    RESTARTS   AGE   IP               NODE                             NOMINATED NODE   READINESS GATES
+api-gateway-7ff5cd988d-5njrt          1/1     Running   0          15m   192.168.60.30    ip-192-168-52-153.ec2.internal   <none>           <none>
+api-gateway-7ff5cd988d-cdhxm          1/1     Running   0          15m   192.168.20.167   ip-192-168-12-207.ec2.internal   <none>           <none>
+mongodb-7dc4596644-52jnh              1/1     Running   0          15m   192.168.32.210   ip-192-168-52-153.ec2.internal   <none>           <none>
+position-simulator-58d495886c-q7mtw   1/1     Running   0          15m   192.168.15.146   ip-192-168-12-207.ec2.internal   <none>           <none>
+position-tracker-65cff5b766-xc8df     1/1     Running   0          15m   192.168.31.86    ip-192-168-9-236.ec2.internal    <none>           <none>
+position-tracker-65cff5b766-z7v7x     1/1     Running   0          15m   192.168.61.40    ip-192-168-52-153.ec2.internal   <none>           <none>
+queue-577c5fccf4-f8vz4                1/1     Running   0          15m   192.168.0.98     ip-192-168-12-207.ec2.internal   <none>           <none>
+webapp-785d5b86bf-9j7hx               1/1     Running   0          15m   192.168.4.24     ip-192-168-9-236.ec2.internal    <none>           <none>
+webapp-785d5b86bf-r54z5               1/1     Running   0          15m   192.168.47.118   ip-192-168-52-153.ec2.internal   <none>           <none>
 
+kubectl apply -f elasticsearch.yaml , fluentd-config.yaml
+
+[ec2-user@ip-172-31-25-176 fleetman]$ kubectl get po -o wide -n kube-system
+NAME                              READY   STATUS    RESTARTS   AGE    IP               NODE                             NOMINATED NODE   READINESS GATES
+aws-node-ctpn7                    1/1     Running   0          54m    192.168.12.207   ip-192-168-12-207.ec2.internal   <none>           <none>
+aws-node-dldrg                    1/1     Running   0          54m    192.168.52.153   ip-192-168-52-153.ec2.internal   <none>           <none>
+aws-node-q78jz                    1/1     Running   0          54m    192.168.9.236    ip-192-168-9-236.ec2.internal    <none>           <none>
+coredns-75b44cb5b4-fsjxr          1/1     Running   0          61m    192.168.45.157   ip-192-168-52-153.ec2.internal   <none>           <none>
+coredns-75b44cb5b4-pqgxf          1/1     Running   0          61m    192.168.6.106    ip-192-168-9-236.ec2.internal    <none>           <none>
+elasticsearch-logging-0           1/1     Running   0          2m5s   192.168.18.153   ip-192-168-9-236.ec2.internal    <none>           <none>
+elasticsearch-logging-1           1/1     Running   0          94s    192.168.33.223   ip-192-168-52-153.ec2.internal   <none>           <none>
+fluentd-es-v2.2.0-fphdd           1/1     Running   0          2m5s   192.168.55.125   ip-192-168-52-153.ec2.internal   <none>           <none>
+fluentd-es-v2.2.0-r8cgq           1/1     Running   0          2m5s   192.168.0.158    ip-192-168-12-207.ec2.internal   <none>           <none>
+fluentd-es-v2.2.0-sq6c7           1/1     Running   0          2m5s   192.168.15.75    ip-192-168-9-236.ec2.internal    <none>           <none>
+kibana-logging-76fcb79b95-tzjxx   1/1     Running   0          2m5s   192.168.7.181    ip-192-168-12-207.ec2.internal   <none>           <none>
+kube-proxy-nndkk                  1/1     Running   0          54m    192.168.9.236    ip-192-168-9-236.ec2.internal    <none>           <none>
+kube-proxy-p9s6w                  1/1     Running   0          54m    192.168.52.153   ip-192-168-52-153.ec2.internal   <none>           <none>
+kube-proxy-qqjgm                  1/1     Running   0          54m    192.168.12.207   ip-192-168-12-207.ec2.internal   <none>           <none>
+
+kubectl get svc
+NAME                        TYPE           CLUSTER-IP       EXTERNAL-IP                                                              PORT(S)              AGE
+fleetman-api-gateway        ClusterIP      10.100.140.179   <none>                                                                   8080/TCP             53m
+fleetman-mongodb            ClusterIP      10.100.228.12    <none>                                                                   27017/TCP            53m
+fleetman-position-tracker   ClusterIP      10.100.50.47     <none>                                                                   8080/TCP             53m
+fleetman-queue              ClusterIP      10.100.115.68    <none>                                                                   8161/TCP,61616/TCP   53m
+fleetman-webapp             LoadBalancer   10.100.150.165   af18e27ad306e48dba719ca0bcfbce67-195180458.us-east-1.elb.amazonaws.com   80:30185/TCP         53m
+kubernetes                  ClusterIP      10.100.0.1       <none>                                                                   443/TCP              62m
+
+[ec2-user@ip-172-31-25-176 fleetman]$ kubectl get svc -n kube-system
+NAME                    TYPE           CLUSTER-IP       EXTERNAL-IP                                                               PORT(S)          AGE
+elasticsearch-logging   ClusterIP      10.100.110.252   <none>                                                                    9200/TCP         3m49s
+kibana-logging          LoadBalancer   10.100.215.93    a0830bbe0cfb44081a4ecec856875b0a-1479651301.us-east-1.elb.amazonaws.com   5601:31228/TCP   3m49s
+kube-dns                ClusterIP      10.100.0.10      <none>                                                                    53/UDP,53/TCP    62m
+[ec2-user@ip-172-31-25-176 fleetman]$
+[ec2-user@ip-172-31-25-176 fleetman]$ kubectl describe svc -n kube-system kibana-logging
+Name:                     kibana-logging
+Namespace:                kube-system
+Labels:                   addonmanager.kubernetes.io/mode=Reconcile
+                          k8s-app=kibana-logging
+                          kubernetes.io/cluster-service=true
+                          kubernetes.io/name=Kibana
+Annotations:              kubectl.kubernetes.io/last-applied-configuration:
+                            {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"addonmanager.kubernetes.io/mode":"Reconcile","k8s-app":"kibana...
+Selector:                 k8s-app=kibana-logging
+Type:                     LoadBalancer
+IP:                       10.100.215.93
+LoadBalancer Ingress:     a0830bbe0cfb44081a4ecec856875b0a-1479651301.us-east-1.elb.amazonaws.com
+Port:                     <unset>  5601/TCP
+TargetPort:               ui/TCP
+NodePort:                 <unset>  31228/TCP
+Endpoints:                192.168.7.181:5601
+Session Affinity:         None
+External Traffic Policy:  Cluster
+Events:
+  Type    Reason                Age    From                Message
+  ----    ------                ----   ----                -------
+  Normal  EnsuringLoadBalancer  7m30s  service-controller  Ensuring load balancer
+  Normal  EnsuredLoadBalancer   7m28s  service-controller  Ensured load balancer
+
+
+eksctl delete cluster fleetman
