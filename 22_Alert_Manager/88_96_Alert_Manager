@@ -1,0 +1,27 @@
+Section 22. The Alert Manager
+
+- 88. Temp problems w/Alert Manager
+  - 2 September 2020:
+    Just to warn you, the Helm chart for Prometheus Operator has been updated in the last few days, and it has
+    caused several variations from what you see on the videos in this section. I am working on a fix for this
+    right now, I am aiming to get a revised version published as soon as possible this September.
+
+    In the meantime, I recommend just watching the videos in this section. When I've updated the course, you'll
+    be able to apply a yaml file which will enable you to replicate what you see on the videos.
+
+    I'm sorry for this; it was a serious mistake to use Helm to install prometheus-operator. It illustrates a
+    major problem with Helm - you lose the ability to control exactly what is being deployed to your cluster.
+
+    I'll post an announcement when the re-worked section is ready.
+
+- 89. Alerting
+- 90. Setting Up A Slack Channel
+- 91. Configuring The AlertManager
+- 92. Errata - different secret name
+- 93. Applying the config with a secret
+- 94. Dealing w/Alerts
+- 95. What happens if Master Node crashes {KOPS only}
+- 96. Case Study : Troubleshooting a "Delinquent" node
+
+
+COMMANDS

@@ -1,13 +1,198 @@
 Section 21. Monitoring a Cluster with Prometheus and Grafana
 
 - 82. Monitoring a Cluster
-  - 
+  - monitors health
+    - enough nodes
+    - resources ok, etc
+  - most cloud providers provide built-in monitoring
+    - if provided doesn't do enough, can use opensource tools
+  - Prometheus
+    - open source
+    - CNCF - CLoud Native Computing Foundation
+    - gathers metrics from running cluster
+  - Grafana
+    - front-end to Prometheus
+    - can integrate w/many sources of data
+    - @44+ data sources it 'talks' to
+  - installation can be challenging
+    - easiest way is to use 'helm' package manager
+  - HELM
 
 - 83. Helm Package Manager
+  - k8s tool
+  - helm.sh home page
+  - package manager for k8s
+  - can use it to install an entire cluster w/1 command line
+  - need to install the helm binary
+    - allows us to issue commands
+    - will need a helm pod
+  - github helm stable
+    - several tools, charts, etc that can be installed
+    - mysql - sample installation
+  - video used an older version of helm
+    - instructions changed for v3.x
+    - in course, searched for 'helm error' and found a way to get repos installed, etc
+
 - 84. Errata - steps needed to get a full set of data from Prometheus
+  - Errata - steps needed to get a full set of data from Prometheus
+  - After I recorded these videos, a problem has been reported that after
+    installing prometheus (coming in the next video), some of the screens
+    of data are blank.
+
+    This isn't a major problem if you're just wanting to try out prometheus, but it is
+    frustrating that you don't see a complete set of data.
+
+    Here is the workaround - it's a simple config change to your kops cluster...
+      1: Edit your cluster definition with "kops edit cluster --name ${NAME}"
+      2: Find the key called "kubelet:", it will have one entry below it called
+      anonymousAuth: false. You're going to add two further entries so that this
+      section looks like the following:
+
+        kubelet:
+        anonymousAuth: false
+        authenticationTokenWebhook: true
+        authorizationMode: Webhook
+
+       3: Save your changes. Then "kops update cluster --yes".
+       4: You will now need to do a "rolling update", which is where kops will kill
+       each node in turn, and bring up a new node with the new configuration.
+
+         kops rolling-update cluster --yes
+
+        Sometimes this process hangs - not a problem. Just wait five minutes, and if
+        no progress, "control-C", re-run the command again. Keep doing this until the
+        rolling update reports there is nothing to do.
+
 - 85. If you get an error when using "helm install"
+  - If you get an error when using "helm install"
+    Hi all, just a quick warning: if you're using Helm to install monitoring, you
+    might get a weird error, something like:
+
+    prometheus-operator" failed: rpc error: code = Canceled
+
+    Or, you might have a similar network related problem.
+    I was first hit with this last week, but many students have reported they don't have
+    the problem, so I don't know exactly who is affected.
+
+    If you are, there's a simple workaround:
+
+        1) helm del --purge monitoring
+        2) helm install --name monitoring --namespace monitoring stable/prometheus-operator --set prometheusOperator.createCustomResource=false
+
+    This workaround is described in the bug report for this at: https://github.com/helm/helm/issues/6130
+
 - 86. Installing Prometheus Operator
+  - helm "charts" are just a set of YAML files to install a 'fully functional component', ie, pods, services, etc , eg database, monitoring
+  - the default charts on the github site come 'vanilla'
+    - requires LOTS of configuration to get it the way you want
+    - prometheus-operator project has a LOT of pre-configured options
+    - same as above, needed to search questions in order to get everything properly installed
+  - separate namespace for monitoring
+    - do kubectl cmds on that to see its configuration
+      - KEY ONE : service/monitoring-grafana
+  - there is a front-end for prometheus
+  - scrapes all  the metrics and pulling it all together
+    - grafana is the front-end
+  - basic prometheus front-end
+    - service/monitoring-prometheus-oper-prometheus
+      - cfg'd as a ClusterIP - change to a LoadBalancer in order to access it - causes a cost
+        - kubectl edit -n monitoring above service
+          - should be put into an editor YAML file - HOLY SHIT !!!!
+            - default into vim editor, change its cfg
+            - upon saving, any errors detected immediately  & ur put back into the editor
+          - redo the kubectl get - you'll see Type column changed
+            - copy fqdn, use port :9090
+            - video said it took @ 4-5 minutes before all the registering, checks, etc took place and the landing page came up
+        - VERY BASIC front-end
+        - pre-configured with HUNDREDS of system metrics
+      - simple line charts, etc
+  - in order to make it look pretty - WOW Factor - use Grafana, next video
+
 - 87. Working with Grafana
+  - Prometheus gathers the metrics
+  - Grafana makes them look pretty
+  - USE
+    - Utilization
+    - Saturation
+      - can the nodes handle their workloads
+    - Errors
 
 COMMANDS
+ssh -i ~/.ssh/2020... ec2-user@ip
+cd fleetman
+eksctl create cluster --name fleetman --nodes-min=3
+kubectl apply -f .
 
+172  wget https://get.helm.sh/helm-v3.4.0-rc.1-linux-amd64.tar.gz
+174  tar zxvf helm-v3.4.0-rc.1-linux-amd64.tar.gz
+176  sudo mv linux-amd64/helm /usr/local/bin/.
+177  rmfr helm-v3.4.0-rc.1-linux-amd64.tar.gz linux-amd64/
+181  helm version
+185  helm repo add stable https://charts.helm.sh/stable
+186  helm search repo mysql
+187  helm install my-special-installation stable/mysql --set mysqlPassword=mysqlPassword
+188  MYSQL_ROOT_PASSWORD=$(kubectl get secret --namespace default my-special-installation-mysql -o jsonpath="{.data.mysql-root-password}" | base64 --decode; echo)
+189  echo $MYSQL_ROOT_PASSWORD
+190  kubectl get po -n kube-system
+195  helm delete  my-special-installation
+198  helm ls
+201  kubectl create namespace monitoring
+202  kubectl get namespace
+kubectl get namespace
+NAME              STATUS   AGE
+default           Active   105m
+kube-node-lease   Active   105m
+kube-public       Active   105m
+kube-system       Active   105m
+monitoring        Active   4m53s
+
+204  helm install monitoring --namespace monitoring stable/prometheus-operator --set prometheusOperator.createCustomResource=false
+205  kubectl --namespace monitoring get pods -l "release=monitoring"
+kubectl --namespace monitoring get pods -l "release=monitoring"
+NAME                                                  READY   STATUS    RESTARTS   AGE
+monitoring-prometheus-node-exporter-49r8s             1/1     Running   0          4m29s
+monitoring-prometheus-node-exporter-8jw4f             1/1     Running   0          4m29s
+monitoring-prometheus-node-exporter-dtbns             1/1     Running   0          4m29s
+monitoring-prometheus-oper-operator-8bd4fb5b8-fvsp2   2/2     Running   0          4m29s
+
+[ec2-user@ip-172-31-25-176 fleetman]$ kubectl get all -n monitoring
+NAME                                                         READY   STATUS    RESTARTS   AGE
+pod/alertmanager-monitoring-prometheus-oper-alertmanager-0   2/2     Running   0          6m
+pod/monitoring-grafana-5694798c88-q9zkm                      2/2     Running   0          6m7s
+pod/monitoring-kube-state-metrics-5f4d9ddc46-cgzqh           1/1     Running   0          6m7s
+pod/monitoring-prometheus-node-exporter-49r8s                1/1     Running   0          6m7s
+pod/monitoring-prometheus-node-exporter-8jw4f                1/1     Running   0          6m7s
+pod/monitoring-prometheus-node-exporter-dtbns                1/1     Running   0          6m7s
+pod/monitoring-prometheus-oper-operator-8bd4fb5b8-fvsp2      2/2     Running   0          6m7s
+pod/prometheus-monitoring-prometheus-oper-prometheus-0       3/3     Running   1          5m50s
+
+NAME                                              TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                      AGE
+service/alertmanager-operated                     ClusterIP   None             <none>        9093/TCP,9094/TCP,9094/UDP   6m
+service/monitoring-grafana                        ClusterIP   10.100.188.23    <none>        80/TCP                       6m7s
+service/monitoring-kube-state-metrics             ClusterIP   10.100.53.248    <none>        8080/TCP                     6m7s
+service/monitoring-prometheus-node-exporter       ClusterIP   10.100.137.114   <none>        9100/TCP                     6m7s
+service/monitoring-prometheus-oper-alertmanager   ClusterIP   10.100.207.117   <none>        9093/TCP                     6m7s
+service/monitoring-prometheus-oper-operator       ClusterIP   10.100.38.122    <none>        8080/TCP,443/TCP             6m7s
+service/monitoring-prometheus-oper-prometheus     ClusterIP   10.100.30.135    <none>        9090/TCP                     6m7s
+service/prometheus-operated                       ClusterIP   None             <none>        9090/TCP                     5m50s
+
+NAME                                                 DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE
+daemonset.apps/monitoring-prometheus-node-exporter   3         3         3       3            3           <none>          6m7s
+
+NAME                                                  READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/monitoring-grafana                    1/1     1            1           6m7s
+deployment.apps/monitoring-kube-state-metrics         1/1     1            1           6m7s
+deployment.apps/monitoring-prometheus-oper-operator   1/1     1            1           6m7s
+
+NAME                                                            DESIRED   CURRENT   READY   AGE
+replicaset.apps/monitoring-grafana-5694798c88                   1         1         1       6m7s
+replicaset.apps/monitoring-kube-state-metrics-5f4d9ddc46        1         1         1       6m7s
+replicaset.apps/monitoring-prometheus-oper-operator-8bd4fb5b8   1         1         1       6m7s
+
+NAME                                                                    READY   AGE
+statefulset.apps/alertmanager-monitoring-prometheus-oper-alertmanager   1/1     6m
+statefulset.apps/prometheus-monitoring-prometheus-oper-prometheus       1/1     5m50s
+[ec2-user@ip-172-31-25-176 fleetman]$
+
+
+eksctl delete cluster fleetman
