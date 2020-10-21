@@ -1,10 +1,68 @@
 Section 24. Kubernetes Requests and Limits
 
 -  99. Memory Requests
-  - 
+  - workloads.yaml file for fleetman pods
+  - in spec section, can make a resource request for :
+    - Memory
+    - cpu
+  - goes in the 'containers' section, eg
+    - resources :
+        requests:
+          memory: 300Mi # MB, 1 Mi = 1024 Ki where 1 Ki = 1024 bytes
+                        # 1
+  - optional
+  - what do we gain
+    - he SUGGESTS we do this
+    - IF we estimate correctly, then this guarantees the pod will behave comfortably
+  - by specifying this, NODE MANAGER can make accurate decisions that a node has enough resources to run >=1 pod
+  - eg, only 1 Node w/ 1Gb of RAM
+    - 3 pods need 300Mb RAM
+    - if a 4th one that needs 300 Mb is deployed, NODE will error out, fall over
+  - these are just guesses - what we "think" the node / pods will use
+  - doesn't try to set that amount aside
+    - values are just used when determining where to put the pod
+    - kubectl describe ... : will show you memory requests
+  - sometimes will go into "pending" state
+  - do a kubectl describe on the pod having an issue
+    - Events at the bottom will usually indicate the issue
 
 - 100. CPU Requests
-- 101. Memory and CPU Limits 
+  - can also request CPUs
+  - kubectl describe lists number of CPUs
+  - k8s documentation "How to Manager Resources for Containers"
+    - docs give you a good estimate
+  - located in same section as above memory
+  - usually do NOT need entire full CPUs per pod
+    - can specify subsets of 1
+      eg, 100m = 1 millicore
+          0.1
+  - doing a kubectl, you can check the various sections on what has already been allocated for 'other' pods, svcs, etc
+    - eg, kube-system, etc need resources as well
+  - kubectl describe again will explain what happens in the end Events sections
+
+- 101. Memory and CPU Limits
+  - Requests are "hint"s used by scheduler to make intelligent decisions on which node to put pods
+    - or there's enough resources on a node to place a pod
+  - the requests are looked at a lot for Horizontal Pod Autoscaling
+  - besides "Requests" can also specify "Limits"
+  - specified same level as 'request'
+  - can specify memory and cpus
+    - specified w/same units
+  - IF THE ACTUAL MEMORY USAGE OF THE CONTAINER AT RUN TIME EXCEEDS THE LIMIT ...
+    ... THE CONTAINER WILL BE KILLED
+  - The pod will remain; the container will therefore attempt to restart
+    - this "could be ok" or it could be dangerous
+      - "ok" if there's a slow memory leak and it takes months to crash,
+      - "bad" if there's an immediate resource issue - endless cycle
+  - IF THE ACTUAL CPU USAGE OF THE CONTAINER AT RUN TIME EXCEEDS THE LIMIT ...
+    - THE CPU WILL BE "CLAMPED" / "THROTTLED"
+      - Container keeps running
+
+  - Microservice architecture - it "should" be ok to lose a container/pod occasionally as long
+    as the YAMLs are written in such a way to stand up/restart another one
+  - This is NOT an excuse for people to write bad containers
+
+  - Status "OOMKILLED"  - Out Of Memory Killed
 
 COMMANDS
-
+- none done in this chapter
