@@ -15,8 +15,34 @@ Section 22. The Alert Manager
     I'll post an announcement when the re-worked section is ready.
 
 - 89. Alerting
+  - kubectl get po -n monitoring
+    - alertmanager-monitoring-prometheus-oper-alertmanager-0   2/2     Running   0          164m
+  - separate pod set up to perform alert monitoring
+  - kubectl get services -n monitoring
+    - alertmanager-operated  9093/TCP,9094/TCP,9094/UDP
+  - "could" make another LoadBalancer to check this out
+    - try another way
+    - can visit ANY service in the cluster using something called a "proxy"
+  - when / if alerts are firing - can see them by visiting alerts service
+  -
+  - ALERT MANAGER was never working for me
+    - none of the services / pods that were in the videos appeared in my cluster
+    - ALSO, had to hack a different service to get to the Alert manager screen he was using BUT NONE OF HIS ALERTS were found in my CLUSTER
+  - DeadMansSwitch, NodeDiskRunningFull
+
+- skipping rest of this section
+
 - 90. Setting Up A Slack Channel
+  - set up an app
+  - set up a incoming webhook which provides REST requests to get alerts from a running app
+
 - 91. Configuring The AlertManager
+  - Prometheus documentation
+  - set up a config file
+    - identify which target system to send alert msg
+    - emails, slack, webhooks {REST}, etc
+  - can set up different targets based upon "severity"
+
 - 92. Errata - different secret name
 - 93. Applying the config with a secret
 - 94. Dealing w/Alerts
@@ -25,3 +51,24 @@ Section 22. The Alert Manager
 
 
 COMMANDS
+[ec2-user@ip-172-31-25-176 fleetman]$ kubectl get po -n monitoring
+NAME                                                     READY   STATUS    RESTARTS   AGE
+alertmanager-monitoring-prometheus-oper-alertmanager-0   2/2     Running   0          164m
+monitoring-grafana-5694798c88-q9zkm                      2/2     Running   0          164m
+monitoring-kube-state-metrics-5f4d9ddc46-cgzqh           1/1     Running   0          164m
+monitoring-prometheus-node-exporter-49r8s                1/1     Running   0          164m
+monitoring-prometheus-node-exporter-8jw4f                1/1     Running   0          164m
+monitoring-prometheus-node-exporter-dtbns                1/1     Running   0          164m
+monitoring-prometheus-oper-operator-8bd4fb5b8-fvsp2      2/2     Running   0          164m
+prometheus-monitoring-prometheus-oper-prometheus-0       3/3     Running   1          164m
+
+[ec2-user@ip-172-31-25-176 fleetman]$ kubectl get services -n monitoring
+NAME                                      TYPE           CLUSTER-IP       EXTERNAL-IP                                                               PORT(S)                      AGE
+alertmanager-operated                     ClusterIP      None             <none>                                                                    9093/TCP,9094/TCP,9094/UDP   177m
+monitoring-grafana                        LoadBalancer   10.100.188.23    af1cbef7b1de044788f3ba3f28418862-1125068590.us-east-1.elb.amazonaws.com   80:31960/TCP                 177m
+monitoring-kube-state-metrics             ClusterIP      10.100.53.248    <none>                                                                    8080/TCP                     177m
+monitoring-prometheus-node-exporter       ClusterIP      10.100.137.114   <none>                                                                    9100/TCP                     177m
+monitoring-prometheus-oper-alertmanager   ClusterIP      10.100.207.117   <none>                                                                    9093/TCP                     177m
+monitoring-prometheus-oper-operator       ClusterIP      10.100.38.122    <none>                                                                    8080/TCP,443/TCP             177m
+monitoring-prometheus-oper-prometheus     ClusterIP      10.100.30.135    <none>                                                                    9090/TCP                     177m
+prometheus-operated                       ClusterIP      None             <none>                                                                    9090/TCP                     177m
