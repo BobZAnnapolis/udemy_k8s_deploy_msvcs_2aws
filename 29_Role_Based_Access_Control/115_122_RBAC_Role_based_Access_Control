@@ -1,0 +1,22 @@
+Section 29. RBAC - Role Based Access Control on a K8S Cluster
+
+- 115. A note for EKS users
+  - If you're working with EKS, then you won't be able to use the Authentication method (certificates) that
+  we use in this section. For that reason, I'm currently working on a new version of this section, especially
+  for EKS. I'll push out an announcement when this new section is ready.
+
+  In brief, if you're using EKS and you need multiple users to access the cluster, then you use IAM to create
+  users, which is a very different approach to the one I use in the following videos.
+
+- 116. Defining Roles
+  - 
+
+- 117. Defining RoleBindings
+- 118. Setting up a "context" for the user
+- 119. Issuing a K8S Cluster X.509 Certificate
+- 120. Installing the user's certificate
+- 121. Allocating Access to Users
+- 122. ClusterRoles & ClusterRoleBindings
+
+
+COMMANDS

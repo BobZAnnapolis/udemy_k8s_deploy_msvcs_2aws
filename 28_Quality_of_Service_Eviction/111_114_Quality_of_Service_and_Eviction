@@ -1,11 +1,240 @@
-Section 28. Quality of Service and Eviction
+Section 28. Quality of Service {QoS} and Eviction
 
 - 111. Understanding the scheduler
-  - 
+  - Job : Decide on which node a particular pod should be placed
+  - ensure that any 1 node is NOT overloaded
+  - sometimes it has to "evict" a pod
+  - example
+    - on a node
+      - Total Memory = 900 Mb
+      - Remaining = 900 Mb
+    - no pods running
+    - after a kubectl apply, Pod1 gets started
+      - Request : 500 Mb
+      - Limit : 500 Mb
+    - scheduler will see there is plenty of memory - this pod goes on that node
+    - 500 Mb used/allocated/requested
+      - means 400 Mb left
+    - REMEMBER : this is just the request, the actual usage could be anything - higher / lower
+    - eg, as it runs, actually uses 450 Mb
+      - since below request & limit - all still ok
+    - Node currently all set at 450Mb / 450 Mb total Remaining
+    - another pod comes along
+      - Request: 300 Mb
+      - no limit
+    - scheduler "could" send this pod to this node as well, if it does,
+      - Pod2 goes on the Node
+    - Node :
+      - Requested : 800 Mb
+      - Remaining : 100 Mb
+    - Pod2 runs for a while and after a while, new memory usage is
+      - Usage : 550 Mb
+      - Free : 350 Mb
+    - Pod3 comes along
+      - Requests : none
+      - Limits : none
+      - NOT RECOMMENDED - SCHEDULER DOES NOT HAVE ANY IDEA OF WHAT ITS USAGE IS / WHERE TO PUT IT
+    - scheduler puts Pod3 on same node
+      - after a while, Pod3 ends up using 200 Mb
+    - new NODE totals
+      - Usage : 750 Mb
+      - Remaining : 150 Mb
+    - PROBLEM : Everything is running "stabley" now - what happens if usage goes up
+      - Pod1 is fine because it has requests / limits defined
+        - if it hits/exceeds its limits : ok - Pod1 will re-schedule this pod - ideally another node
+      - Pod2 & Pod3 don't have this kind of handling restrictions
+        - Pod3 is worst -
+    - KEY : DEFINE REQUESTS & LIMITS SO SCHEDULER CAN BEHAVE PROPERLY
+    - K8S gives pods "labels"
+      - Pod1 - is a "nice" pod - cuz it provided requests/limits
+      - Pod2 - only 1 - "ok"
+      - Pod3 - no requests/limits - called a "rude" pod
+
+    "QoS" - Quality of Service labels for scheduler
+      - Request = Limit -> "QoS:Guaranteed"  - memory/cpu vals equal
+      - at least 1 request / no limit -> "QoS:Burstable" - scheduler doesn't have all info it need
+      - not above - "QoS:BestEffort" - labels used by scheduler when things start "going wrong"
 
 - 112. QoS Labels
+  - labels used by scheduler to determine "actions" when things start going wrong, ie running out of resources
+  - kubectl describe pod queue-7b944ff846-n5pzn - check QoS Label - this matches def in YAML file
+Name:         queue-7b944ff846-n5pzn
+Namespace:    default
+Priority:     0
+Node:         minikube/192.168.49.2
+Start Time:   Fri, 23 Oct 2020 16:18:38 -0400
+Labels:       app=queue
+              pod-template-hash=7b944ff846
+Annotations:  <none>
+Status:       Running
+IP:           172.17.0.3
+IPs:
+  IP:           172.17.0.3
+Controlled By:  ReplicaSet/queue-7b944ff846
+Containers:
+  queue:
+    Container ID:   docker://567848988d8868eec45ff807cc4255caddd37f50881bedee732205b99fc6426c
+    Image:          richardchesterwood/k8s-fleetman-queue:release1
+    Image ID:       docker-pullable://richardchesterwood/k8s-fleetman-queue@sha256:bc2cb90a09aecdd8bce5d5f3a8dac17281ec7883077ddcfb8b7acfe2ab3b6afa
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Fri, 23 Oct 2020 16:18:40 -0400
+    Ready:          True
+    Restart Count:  0
+    Requests:
+      cpu:        1
+      memory:     50Mi
+    Environment:  <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-pxvfk (ro)
+Conditions:
+  Type              Status
+  Initialized       True
+  Ready             True
+  ContainersReady   True
+  PodScheduled      True
+Volumes:
+  default-token-pxvfk:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  default-token-pxvfk
+    Optional:    false
+QoS Class:       Burstable   <- Requests specified BUT NO LIMITS
+Node-Selectors:  <none>
+Tolerations:     node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                 node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:          <none>
+
+kubectl describe pod position-tracker-7964b5474f-rbbk6  = NO REQS/LIMITS SPECIFIED
+
+Name:         position-tracker-7964b5474f-rbbk6
+Namespace:    default
+Priority:     0
+Node:         minikube/192.168.49.2
+Start Time:   Fri, 23 Oct 2020 16:18:38 -0400
+Labels:       app=position-tracker
+              pod-template-hash=7964b5474f
+Annotations:  <none>
+Status:       Running
+IP:           172.17.0.4
+IPs:
+  IP:           172.17.0.4
+Controlled By:  ReplicaSet/position-tracker-7964b5474f
+Containers:
+  position-tracker:
+    Container ID:   docker://088c70562459f101c86e23fb2926c8cb8b0faa161002c06f6c27b4a9b53dec6a
+    Image:          richardchesterwood/k8s-fleetman-position-tracker:release1
+    Image ID:       docker-pullable://richardchesterwood/k8s-fleetman-position-tracker@sha256:5da78e936eb77677fbf30e528253a543badc76a5dd3a356b6d13e716da187298
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Fri, 23 Oct 2020 16:18:40 -0400
+    Ready:          True
+    Restart Count:  0
+    Environment:
+      SPRING_PROFILES_ACTIVE:  production-microservice
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-pxvfk (ro)
+Conditions:
+  Type              Status
+  Initialized       True
+  Ready             True
+  ContainersReady   True
+  PodScheduled      True
+Volumes:
+  default-token-pxvfk:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  default-token-pxvfk
+    Optional:    false
+QoS Class:       BestEffort   <- NO REQUESTS/LIMITS SPECIFIED
+Node-Selectors:  <none>
+Tolerations:     node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                 node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:          <none>
+
+kubectl describe pod queue-848b587c44-mgz4l  <- YAML *_QOS_Q_GUARANTEED
+Name:         queue-848b587c44-mgz4l
+Namespace:    default
+Priority:     0
+Node:         minikube/192.168.49.2
+Start Time:   Fri, 23 Oct 2020 19:02:08 -0400
+Labels:       app=queue
+              pod-template-hash=848b587c44
+Annotations:  <none>
+Status:       Running
+IP:           172.17.0.4
+IPs:
+  IP:           172.17.0.4
+Controlled By:  ReplicaSet/queue-848b587c44
+Containers:
+  queue:
+    Container ID:   docker://d31af4bfb99cfbc2d682b678a816a3d3b429340e83dd40c0cbb57f11e8cfcf5b
+    Image:          richardchesterwood/k8s-fleetman-queue:release1
+    Image ID:       docker-pullable://richardchesterwood/k8s-fleetman-queue@sha256:bc2cb90a09aecdd8bce5d5f3a8dac17281ec7883077ddcfb8b7acfe2ab3b6afa
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Fri, 23 Oct 2020 19:02:10 -0400
+    Ready:          True
+    Restart Count:  0
+    Limits:
+      cpu:     100m
+      memory:  300Mi
+    Requests:
+      cpu:        100m
+      memory:     300Mi
+    Environment:  <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-pxvfk (ro)
+Conditions:
+  Type              Status
+  Initialized       True
+  Ready             True
+  ContainersReady   True
+  PodScheduled      True
+Volumes:
+  default-token-pxvfk:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  default-token-pxvfk
+    Optional:    false
+QoS Class:       Guaranteed  <= REQUESTS / LIMITS defined and = values
+Node-Selectors:  <none>
+Tolerations:     node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                 node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  41s   default-scheduler  Successfully assigned default/queue-848b587c44-mgz4l to minikube
+  Normal  Pulled     39s   kubelet            Container image "richardchesterwood/k8s-fleetman-queue:release1" already present on machine
+  Normal  Created    39s   kubelet            Created container queue
+  Normal  Started    39s   kubelet            Started container queue
+
+  - what are they good for ? ... next section ...
+
 - 113. Evictions
+  - labels help scheduler {cgroups} what to do when things go wrong
+  - using above stats
+    - POD1 starts using more memory
+    - w/all 3 pods running
+      - since POD1 has requests/limits defined, when exceeds
+      - immediately killed
+      - ready to be scheduled somewhere else
+      - NEED ALERT MANAGER TO DETECT THESE CONDITIONS AND CORRECT THEM
+    - if POD2 increases to 400MB - this is "OK" to go above the amount requested
+      - "BURSTABLE" - pod allowed to go over the request {ideally, in bursts}
+      - ok to go up BUT NOW THE AVAILABLE MEMORY ON THE NODE is OVERCOMMITTED
+        - THIS IS NOT ALLOWED FOR A NODE - SCHEDULER KICKS IN
+          - has to EVICT "some" of the nodes
+            - evicts "BestEffort" nodes 1st -> then "Burstable" -> last resort "Guaranteed"
+
 - 114. Pod Priorities
+  - k8s v1.14+
+  - teacher not used it yet in production
+  - 2 uses :
+    - QoS label used for eviction on existing pods
+    - Priorities "usually" used for NEW pods to be scheduled
+  - see docs for syntax  and interaction between new pods, QoS, priorities, etc
+
+- "every microservice should be reschedulable"
 
 COMMANDS
-
