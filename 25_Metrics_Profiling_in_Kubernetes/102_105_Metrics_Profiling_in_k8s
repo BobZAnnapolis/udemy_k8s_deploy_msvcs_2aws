@@ -1,10 +1,152 @@
 Section 25. Metrics Profiling in Kubernetes
 
 - 102. Enabling the Metrics Server
-  - 
+  - how do we come up with the values for the Requests & Limits ?
+    - need some container metrics
+  - depends on technology, languages being used
+  - ideally would be nice to "profile" the functionality and get some useful pod metrics
+  - "kubectl top" can be used
+    - stats on each pod
+    - out of the box doesn't work
+    - have to start another pod
+      - works harder on cloud
+      - easier in MiniKube
+      - from cmd, minikube addons {see below}
+    - minikube addons enable ...
+      - needs at least a minute to gather metrics
+    - kubectl get all -n kube-system
+      - see additional pods for metrics-server
+      bobzawislak (main *) 25_Metrics_Profiling_in_Kubernetes $ kubectl top node
+NAME       CPU(cores)   CPU%   MEMORY(bytes)   MEMORY%
+minikube   150m         7%     1200Mi          15%
+bobzawislak (main *) 25_Metrics_Profiling_in_Kubernetes $ kubectl top pod
+NAME                     CPU(cores)   MEMORY(bytes)
+queue-658b766c97-bc84q   2m           227Mi
+queue-658b766c97-dsn8l   2m           228Mi
+    - reflects amount the containers in the pod are actually using
+    -
 
 - 103. Viewing Metrics on the Dashboard
+  - can use cmd line to see these
+  - there is a graphical output as well
+  - not as good as Prometheus
+  - there is a K8S dashboard
+    - minikube addons enable Dashboard
+      - then minikube dashboard
+      - minimal functionality
+      - not pretty but functional
+  - play around, can see logs, can do scaling via UI
+  - change workload queue cpu to 100Mi
+    - apply -> changes to pending
+    - describe indicates
+    Events:
+  Type     Reason            Age                  From               Message
+  ----     ------            ----                 ----               -------
+  Warning  FailedScheduling  55s (x6 over 5m19s)  default-scheduler  0/1 nodes are available: 1 Insufficient cpu.
+
+
 - 104. Tuning Java Spring Boot Applications, Heap Restrictions
+  - kubectl top pod - get memory & cpu stats
+    - lot of the apps here are JAVA SPRING BOOT
+      - use a lot of memory
+  - lot of implementations rely upon developer knowledge
+    - for this course, api-gateway, position-* apps is using a lot of memory
+      - instructor knows this
+      - kubectl top pod
+          NAME                                  CPU(cores)   MEMORY(bytes)
+          api-gateway-85944f447b-5rr2b          140m         584Mi
+          position-simulator-54c465565f-hjcgq   25m          353Mi
+          position-tracker-7964b5474f-n74fr     38m          366Mi
+          queue-7b944ff846-5hhlz                54m          314Mi
+  - JAVA uses {lot of} RAM
+    - language allows cfg parms for memory usage
+  - instructor didn't specify a maximum heap size for this course
+    - app will use 1/4 of host RAM's maximum heap
+      - if multiple pods on same host, run out fast :-(
+  - apps don't know they are running in containers
+    - they behave as if they are full-blown apps w/dedicated resources
+
+  - LEARN INDIVIDUAL LANGUAGE LIMITS, USAGES, DO PROFILING TO DETERMINE REASONABLE LIMITS
+
+  - teacher modified DockerFiles and rebuilt w/new tag
+    - change tag in yaml to use 'resources' - apply
+    - wait a few minutes to do another kubectl top pod & node - compare to above  - LOT LOWER
+        kubectl top pod
+        NAME                                  CPU(cores)   MEMORY(bytes)
+        api-gateway-bfdcc5dc5-7l64f           205m         150Mi
+        position-simulator-7bdfc97686-tk6vp   36m          130Mi
+        position-tracker-696998548-n225l      104m         159Mi
+        queue-7b944ff846-5hhlz                42m          239Mi
+
+        kubectl top node
+        NAME       CPU(cores)   CPU%   MEMORY(bytes)   MEMORY%
+        minikube   467m         23%    1410Mi          17%
+
 - 105. Setting Reasonable Requests
+  - using above values after we change the resources usage
+  - monitor for a long period of time {taking into account users hitting it}
+  - 
+
 
 COMMANDS
+start Docker Desktop
+dev
+cd udem-tab
+12  cd 25_Metrics_Profiling_in_Kubernetes/
+21  minikube start --memory 7966
+13  kubectl get all
+15  dlogin
+23  kubectl apply -f resources.yaml
+bobzawislak (main *) 25_Metrics_Profiling_in_Kubernetes $ minikube addons list
+|-----------------------------|----------|--------------|
+|         ADDON NAME          | PROFILE  |    STATUS    |
+|-----------------------------|----------|--------------|
+| ambassador                  | minikube | disabled     |
+| csi-hostpath-driver         | minikube | disabled     |
+| dashboard                   | minikube | disabled     |
+| default-storageclass        | minikube | enabled ✅   |
+| efk                         | minikube | disabled     |
+| freshpod                    | minikube | disabled     |
+| gcp-auth                    | minikube | disabled     |
+| gvisor                      | minikube | disabled     |
+| helm-tiller                 | minikube | disabled     |
+| ingress                     | minikube | disabled     |
+| ingress-dns                 | minikube | disabled     |
+| istio                       | minikube | disabled     |
+| istio-provisioner           | minikube | disabled     |
+| kubevirt                    | minikube | disabled     |
+| logviewer                   | minikube | disabled     |
+| metallb                     | minikube | disabled     |
+| metrics-server              | minikube | disabled     |
+| nvidia-driver-installer     | minikube | disabled     |
+| nvidia-gpu-device-plugin    | minikube | disabled     |
+| olm                         | minikube | disabled     |
+| pod-security-policy         | minikube | disabled     |
+| registry                    | minikube | disabled     |
+| registry-aliases            | minikube | disabled     |
+| registry-creds              | minikube | disabled     |
+| storage-provisioner         | minikube | enabled ✅   |
+| storage-provisioner-gluster | minikube | disabled     |
+| volumesnapshots             | minikube | disabled     |
+|-----------------------------|----------|--------------|
+
+bobzawislak (main *) 25_Metrics_Profiling_in_Kubernetes $ kubectl top node
+NAME       CPU(cores)   CPU%   MEMORY(bytes)   MEMORY%
+minikube   150m         7%     1200Mi          15%
+bobzawislak (main *) 25_Metrics_Profiling_in_Kubernetes $ kubectl top pod
+NAME                     CPU(cores)   MEMORY(bytes)
+queue-658b766c97-bc84q   2m           227Mi
+queue-658b766c97-dsn8l   2m           228Mi
+
+kubectl apply -f workloads.yaml
+kubectl apply -f services.yaml
+
+bobzawislak (main *) 25_Metrics_Profiling_in_Kubernetes $ kubectl top pod
+NAME                                  CPU(cores)   MEMORY(bytes)
+api-gateway-85944f447b-5rr2b          140m         584Mi
+position-simulator-54c465565f-hjcgq   25m          353Mi
+position-tracker-7964b5474f-n74fr     38m          366Mi
+queue-7b944ff846-5hhlz                54m          314Mi
+
+to get the URL to access web app
+minikube service fleetman-webapp --url
