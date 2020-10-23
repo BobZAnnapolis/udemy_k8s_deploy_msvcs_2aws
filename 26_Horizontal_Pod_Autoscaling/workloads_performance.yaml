@@ -15,11 +15,11 @@ spec:
     spec:
       containers:
       - name: queue
-        image: richardchesterwood/k8s-fleetman-queue:resources
+        image: richardchesterwood/k8s-fleetman-queue:release1
         resources:
           requests:
-            memory: 50Mi  # 500Mi
-            cpu: 1  # 100m
+            memory: 50Mi
+            cpu: 1
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -37,15 +37,10 @@ spec:
     spec:
       containers:
       - name: position-simulator
-        image: richardchesterwood/k8s-fleetman-position-simulator:resources
+        image: richardchesterwood/k8s-fleetman-position-simulator:release1
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: production-microservice
-        resources:
-          requests:
-            memory: 200Mi
-            cpu: 50m
-
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -63,15 +58,10 @@ spec:
     spec:
       containers:
       - name: position-tracker
-        image: richardchesterwood/k8s-fleetman-position-tracker:resources
+        image: richardchesterwood/k8s-fleetman-position-tracker:release1
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: production-microservice
-        resources:
-          requests:
-            memory: 200Mi
-            cpu: 50m
-
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -89,15 +79,14 @@ spec:
     spec:
       containers:
       - name: api-gateway
-        image: richardchesterwood/k8s-fleetman-api-gateway:resources
+        image: richardchesterwood/k8s-fleetman-api-gateway:performance
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: production-microservice
         resources:
           requests:
-            memory: 300Mi
+            memory: 200Mi
             cpu: 50m
-
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -119,7 +108,3 @@ spec:
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: production-microservice
-        resources:
-          requests:
-            memory: 100Mi
-            cpu: 50m

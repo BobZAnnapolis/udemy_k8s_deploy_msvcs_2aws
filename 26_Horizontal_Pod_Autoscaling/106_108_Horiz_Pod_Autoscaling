@@ -1,0 +1,117 @@
+Section 26. Horizontal Pod Autoscaling
+
+- 106. Update :
+    Update: you will need to modify the yaml file in the next video
+      In the next video, towards the end (around 29 minutes), we will be automatically generating
+      a yaml file to run the process of "autoscaling".
+
+      At the time of writing, there is a Kubernetes bug here. The generated yaml will contain a
+      line like the following (around line 10):
+
+      apiVersion: extensions/v1beta1
+
+      This is an old api version which is no longer valid. You need to modify this value to (and
+      be careful to preserve the indentation!)
+
+      apiVersion: apps/v1beta1
+
+      I don't know why this has happened (a piece of out of date software in Kubernetes somewhere),
+      and by the time you see the video this might have been fixed!
+
+- 107. Introducing Replication and Autoscaling
+  - k8s can automatically resize clusters depending on workload
+  - NOT EVERY POD CAN BE REPLICATED !!!
+    - have to ensure the software running inside the pod so that it can be replicated
+
+  - i could only get the ch 25 workloads & services yaml files working again
+
+  - {BAD} in this example, the position-simulator is reading data from an internal file
+    - if we replicate this, the same values will be sent multiple times
+  - {GOOD} position-tracker - gets values to save from trucks in a mongo db
+  - {GOOD} API-GATEWAY - just a routing service - ok to have the same data in multiple places
+  - routing algorithm coming down the road
+  - mongo dbs can be replicated - but mongo has built in functionality to replicate, ie "sharding"
+  - "horizontal scaling"/replicating
+    - making a cluster more powerful by starting up more pods
+  - "vertical scaling"
+    - change existing pods characteristics
+
+    kubectl describe pod api-gateway-5c7785557c-b6nxw
+    Name:         api-gateway-5c7785557c-b6nxw
+    Namespace:    default
+    Priority:     0
+    Node:         minikube/192.168.49.2
+    Start Time:   Fri, 23 Oct 2020 17:04:34 -0400
+    Labels:       app=api-gateway
+                  pod-template-hash=5c7785557c
+    Annotations:  <none>
+    Status:       Running
+    IP:           172.17.0.9
+    IPs:
+      IP:           172.17.0.9
+    Controlled By:  ReplicaSet/api-gateway-5c7785557c
+    Containers:
+      api-gateway:
+        Container ID:   docker://a8e497954a611d512ad641470103f837cd9201c6eed6e9ad4166e258c1c15650
+        Image:          richardchesterwood/k8s-fleetman-api-gateway:performance
+        Image ID:       docker-pullable://richardchesterwood/k8s-fleetman-api-gateway@sha256:19ea0588b3127f45420120de171da151bca5efacebcbc963fcb05419c12cdbe0
+        Port:           <none>
+        Host Port:      <none>
+        State:          Running
+          Started:      Fri, 23 Oct 2020 17:04:51 -0400
+        Ready:          True
+        Restart Count:  0
+        Requests:
+          cpu:     50m
+          memory:  200Mi
+        Environment:
+          SPRING_PROFILES_ACTIVE:  production-microservice
+        Mounts:
+          /var/run/secrets/kubernetes.io/serviceaccount from default-token-pxvfk (ro)
+    Conditions:
+      Type              Status
+      Initialized       True
+      Ready             True
+      ContainersReady   True
+      PodScheduled      True
+    Volumes:
+      default-token-pxvfk:
+        Type:        Secret (a volume populated by a Secret)
+        SecretName:  default-token-pxvfk
+        Optional:    false
+    QoS Class:       Burstable
+    Node-Selectors:  <none>
+    Tolerations:     node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                     node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+    Events:
+      Type    Reason     Age    From               Message
+      ----    ------     ----   ----               -------
+      Normal  Scheduled  7m36s  default-scheduler  Successfully assigned default/api-gateway-5c7785557c-b6nxw to minikube
+      Normal  Pulling    7m34s  kubelet            Pulling image "richardchesterwood/k8s-fleetman-api-gateway:performance"
+      Normal  Pulled     7m20s  kubelet            Successfully pulled image "richardchesterwood/k8s-fleetman-api-gateway:performance" in 13.988469633s
+      Normal  Created    7m20s  kubelet            Created container api-gateway
+      Normal  Started    7m19s  kubelet            Started container api-gateway
+
+  kubectl top pod
+  NAME                                  CPU(cores)   MEMORY(bytes)
+  api-gateway-5c7785557c-b6nxw          14m          151Mi
+  position-simulator-54c465565f-kvjcl   21m          691Mi
+  position-tracker-7964b5474f-rbbk6     5m           611Mi
+  queue-7b944ff846-n5pzn                31m          227Mi
+  webapp-6d4bd8866f-97c2n               0m           3Mi
+
+  - main thing w/auto-scaling
+    - MAKE SURE SOFTWARE RUNNING ON POD CAN BE REPLICATED/SCALED
+    - CAN REALLY ONLY TEST BY SETTING LIMITS/RESOURCES/TESTING/etc TO EXCEED RESOURCES & KEEP EYE ON CLUSTER TO SEE MORE AUTO-Started
+
+  - kubectl autoscale deployment commands to set limits determining when autoscaling can occur
+  - need separate HPAs for each deployment
+  - kubectl get hpa -o yaml -> save YAML files to be used to recreate this configuration
+    - status values in YAML are created on the file - don't need those
+
+- 108. Testing Autoscaling
+  - need to somehow set artifical limits/use test tools to exceed specified resources to test this
+  - DO NOT WANT TO SEE THRASHING
+    - really only want to see gradual scale ups/scale downs - and when they're done - they stay up/down for LONG time
+
+COMMANDS
