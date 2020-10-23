@@ -1,10 +1,162 @@
-Section 27. Liveness and Readiness Probes 
+Section 27. Liveness and Readiness Probes
 
 - 109. Demo : why readiness probes are needed
-  - 
+  - using previous sections workloads/services
+  - Current Existing Configuration Problem :
+    - when a container gets set to RUNNING - kubernetes "thinks" that container is OK
+      - PROBLEM : SOFTWARE inside might not be able to perform its functionality, eg handle HTTP requests, etc
+  - "running" & WORKING depends on the functionality of the container, the language, etc
+    - some microservices might take some time to actually be init'd & ready to do its thing
+  - use these 2 probes to "solidify" functionality of each container, where applicable
 
-- 110. Applying Livess & Readiness Probes 
+- 110. Applying Liveness & Readiness Probes
+  - configured the same, different concepts
+  - READINESS :
+    - give k8s some criteria til readiness probe is 'ready' to receive requests
+    - httpGet for web servers
+    - can put timeLimits on others
+    - POD FAILED w/course settings - SEE BELOW
+      - had to add initialDelaySeconds & periodSeconds in order to get a successful start
+      readinessProbe:
+        httpGet:
+          path: /
+          port: 8080
+        initialDelaySeconds: 5
+        periodSeconds: 10
 
+  - LIVENESS :
+    - same as Readiness but CONTINUOUSLY RUNS while program is running
+      - ANY TIME IT FAILS - K8S kills the pod & restarts
+      - NO EXCUSE to push out buggy code ... but ...
+      - USE failureThreshold parm
+        - it will restart the same pod so if there is an inherent problem - will be in an endless loop of crashing/restarting
+  - can also use cmds in each probe to determine if they are "ready"/"live"
 
 COMMANDS
 
+kubectl top pod
+NAME                                  CPU(cores)   MEMORY(bytes)
+api-gateway-5c7785557c-b6nxw          4m           157Mi
+position-simulator-54c465565f-kvjcl   20m          521Mi
+position-tracker-7964b5474f-rbbk6     5m           611Mi
+queue-7b944ff846-n5pzn                31m          199Mi
+webapp-6d4bd8866f-97c2n               0m           3Mi
+
+kubectl top node
+NAME       CPU(cores)   CPU%   MEMORY(bytes)   MEMORY%
+minikube   222m         11%    2294Mi          28%
+
+
+bobzawislak (main *) 27_Readiness_Liveness_Probes $ kubectl describe pod api-gateway-6ffc9bd497-9gjdw
+Name:         api-gateway-6ffc9bd497-9gjdw
+Namespace:    default
+Priority:     0
+Node:         minikube/192.168.49.2
+Start Time:   Fri, 23 Oct 2020 18:11:17 -0400
+Labels:       app=api-gateway
+              pod-template-hash=6ffc9bd497
+Annotations:  <none>
+Status:       Running
+IP:           172.17.0.6
+IPs:
+  IP:           172.17.0.6
+Controlled By:  ReplicaSet/api-gateway-6ffc9bd497
+Containers:
+  api-gateway:
+    Container ID:   docker://77ef9dba8c77d0c57df77698242c9d82916628e268593684d84d338fa753adc0
+    Image:          richardchesterwood/k8s-fleetman-api-gateway:performance
+    Image ID:       docker-pullable://richardchesterwood/k8s-fleetman-api-gateway@sha256:19ea0588b3127f45420120de171da151bca5efacebcbc963fcb05419c12cdbe0
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Fri, 23 Oct 2020 18:11:19 -0400
+    Ready:          True
+    Restart Count:  0
+    Requests:
+      cpu:      50m
+      memory:   200Mi
+    Readiness:  http-get http://:8080/ delay=0s timeout=1s period=10s #success=1 #failure=3
+    Environment:
+      SPRING_PROFILES_ACTIVE:  production-microservice
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-pxvfk (ro)
+Conditions:
+  Type              Status
+  Initialized       True
+  Ready             True
+  ContainersReady   True
+  PodScheduled      True
+Volumes:
+  default-token-pxvfk:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  default-token-pxvfk
+    Optional:    false
+QoS Class:       Burstable
+Node-Selectors:  <none>
+Tolerations:     node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                 node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type     Reason     Age   From               Message
+  ----     ------     ----  ----               -------
+  Normal   Scheduled  59s   default-scheduler  Successfully assigned default/api-gateway-6ffc9bd497-9gjdw to minikube
+  Normal   Pulled     58s   kubelet            Container image "richardchesterwood/k8s-fleetman-api-gateway:performance" already present on machine
+  Normal   Created    58s   kubelet            Created container api-gateway
+  Normal   Started    57s   kubelet            Started container api-gateway
+  Warning  Unhealthy  52s   kubelet            Readiness probe failed: Get "http://172.17.0.6:8080/": dial tcp 172.17.0.6:8080: connect: connection refused
+  bobzawislak (main *) 27_Readiness_Liveness_Probes $ kubectl describe pod api-gateway-6546b6d6d-qgj9d
+  Name:         api-gateway-6546b6d6d-qgj9d
+  Namespace:    default
+  Priority:     0
+  Node:         minikube/192.168.49.2
+  Start Time:   Fri, 23 Oct 2020 18:19:04 -0400
+  Labels:       app=api-gateway
+                pod-template-hash=6546b6d6d
+  Annotations:  <none>
+  Status:       Running
+  IP:           172.17.0.10
+  IPs:
+    IP:           172.17.0.10
+  Controlled By:  ReplicaSet/api-gateway-6546b6d6d
+  Containers:
+    api-gateway:
+      Container ID:   docker://24ea9728dbd3e61c95942bbe242c55af68a1949a093565bd593988ab9611a7a6
+      Image:          richardchesterwood/k8s-fleetman-api-gateway:performance
+      Image ID:       docker-pullable://richardchesterwood/k8s-fleetman-api-gateway@sha256:19ea0588b3127f45420120de171da151bca5efacebcbc963fcb05419c12cdbe0
+      Port:           <none>
+      Host Port:      <none>
+      State:          Running
+        Started:      Fri, 23 Oct 2020 18:19:06 -0400
+      Ready:          True
+      Restart Count:  0
+      Requests:
+        cpu:      50m
+        memory:   200Mi
+
+      Readiness:  http-get http://:8080/ delay=5s timeout=1s period=10s #success=1 #failure=3
+
+      Environment:
+        SPRING_PROFILES_ACTIVE:  production-microservice
+      Mounts:
+        /var/run/secrets/kubernetes.io/serviceaccount from default-token-pxvfk (ro)
+  Conditions:
+    Type              Status
+    Initialized       True
+    Ready             True
+    ContainersReady   True
+    PodScheduled      True
+  Volumes:
+    default-token-pxvfk:
+      Type:        Secret (a volume populated by a Secret)
+      SecretName:  default-token-pxvfk
+      Optional:    false
+  QoS Class:       Burstable
+  Node-Selectors:  <none>
+  Tolerations:     node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                   node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+  Events:
+    Type    Reason     Age   From               Message
+    ----    ------     ----  ----               -------
+    Normal  Scheduled  43s   default-scheduler  Successfully assigned default/api-gateway-6546b6d6d-qgj9d to minikube
+    Normal  Pulled     42s   kubelet            Container image "richardchesterwood/k8s-fleetman-api-gateway:performance" already present on machine
+    Normal  Created    42s   kubelet            Created container api-gateway
+    Normal  Started    41s   kubelet            Started container api-gateway
