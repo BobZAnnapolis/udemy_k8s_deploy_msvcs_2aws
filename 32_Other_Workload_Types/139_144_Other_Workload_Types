@@ -1,0 +1,12 @@
+Section 32. Other Workload Types
+
+- 139. Batch Jobs
+  - 
+- 140. Cron jobs
+- 141. DaemonSets
+- 142. StatefulSets Overview
+- 143. StatefulSets for Database Replication
+- 144. Demo : Scaling Out a Mongo DB
+
+
+COMMANDS

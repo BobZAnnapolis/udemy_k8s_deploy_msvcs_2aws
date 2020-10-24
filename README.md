@@ -3,3 +3,5 @@
 Udemy course - Kubernetes Hands-on Deploy Microservices to AWS Cloud
 
 Cloud Native Foundation
+
+minikube service fleetman-webapp --url

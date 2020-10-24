@@ -1,0 +1,57 @@
+Section 31. Ingress Controllers
+
+- 132. Introducing Ingress
+  - 2 ways to access services
+    - kubectl get svc {on minikube}
+    - NodePort : our webapp
+    - ClusterIP : not accessible outside the cluster
+  - want users to access our system thru webApp
+  - admins need to access some others, eg queue,
+  - can only use ports in range 30000+
+    - could for testing functionality
+  - the REAL WAY to access apps are thru LoadBalancers
+  - cloud providers offer these
+    - highly available, highly resilient
+  - YAML : specify LoadBalancer
+    - go thru port 80 to route traffic to service
+    - PROBLEM : ok for only 1 service - if multiple services - need a different solution
+      - do NOT want to have separate LBs for each service
+        - ok cuz they'll each have port 80 - but then for many svcs - don't want 1-to-1 service-LB ratio
+          -since LBs are expensive - don't want to have multiple LBs
+  - some cloud providers provide 'Application Load Balancers' - not very portable between different cloud providers
+  - can make this functionality work using "Ingress Controller"
+  - just have 1 Load Balancer, listen on any port - usually 80 - cfg it to talk to 1 svc - Ingress Controller
+    - commonly implemented as NGINX
+      - based on cfg rules - will make routing decisions for us
+  - still need a Load Balancer {usually only need 1, but can replicate for resiliency}
+    - handles requests from multiple nodes
+
+- 133. Defining Routing Rules
+  - allows us to define routing rules to route requests to appropriate services
+  - in minikube
+    - addons ingress
+  - i can't do cuz i can't start my version with the --vm=true parameter
+  - another YAML file
+    - see chapter files
+  - specify "kind: Ingress"
+
+  - ADDED "fake" DOMAIN NAMES in /etc/hosts specifying host address - NOT RECOMMENDED FOR PROD - GOOD FOR TESTING
+  -
+
+- 134. Adding Routes
+  -
+
+- 135. Authentication
+  - NGINX Ingress Controller w/k8s
+    - can create secrets for generic authentication to test userid-pw
+  - htpasswd tool
+    - use "test" credentials
+  - BASIC AUTH credentials are USUALLY REMEMBERED BY BROWSER - COULD BE A PROBLEM
+    - need to clear cookies/data
+
+- 136. Running Ingress on AWS
+- 137. Testing the Ingress Rules
+- 138. extra : setting up HTTPS w/TLS termination at the load balancer
+
+
+COMMANDS
