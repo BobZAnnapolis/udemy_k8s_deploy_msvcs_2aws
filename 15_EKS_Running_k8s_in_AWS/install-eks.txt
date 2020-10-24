@@ -51,7 +51,6 @@ You also need to create an inline policy, using the following:
   ]
 }
 
-
 4: Add a user to the group
 --------------------------
 
@@ -74,4 +73,3 @@ Check the version with "kubectl version --client"
 ----------------------
 
 eksctl create cluster --name fleetman --nodes-min=3
-

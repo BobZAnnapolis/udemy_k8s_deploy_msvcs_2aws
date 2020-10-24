@@ -56,8 +56,18 @@ Section 15. EKS Running K8S In The AWS CLoud
 18  /usr/local/bin/aws --version
 19  exit
 20  aws --version
-22  aws eks list-clusters
+22  aws eks list-clusters - should fail - need to cfg other things
+IAM - CREATE IAM EKS-GROUP
+    - AmazonEC2FullAccess
+    - IAMFullAccess
+    - AWSCloudFormationFullAccess
+  - next step
+  - new group
+  - new Inline Policy
+    - copy-paste install-eks.txt yaml
 23  aws configure
+  - For the user - create an access key
+  - use created credentials on command line 
 24  aws eks list-clusters
 25  export RELEASE=1.17.0
 26  curl -LO https://storage.googleapis.com/kubernetes-release/release/v$RELEASE/bin/linux/amd64/kubectl

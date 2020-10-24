@@ -9,14 +9,150 @@ Section 29. RBAC - Role Based Access Control on a K8S Cluster
   users, which is a very different approach to the one I use in the following videos.
 
 - 116. Defining Roles
-  - 
+  - RBAC - setting the rights and privileges of the administers of the cluster
+  - developers' access
+  - can define any role we like
+    - what tasks can they perform
+  - can define what tasks can be performed against cluster resources
+  - see docs for YAML syntax
 
 - 117. Defining RoleBindings
-- 118. Setting up a "context" for the user
-- 119. Issuing a K8S Cluster X.509 Certificate
-- 120. Installing the user's certificate
-- 121. Allocating Access to Users
-- 122. ClusterRoles & ClusterRoleBindings
+  - kubectl get roles, k.. get role name, k.. describe role name
+  - "RoleBinding"
+    - create a user
+    - allows us to put users into roles
+  - k8s doesn't define users
+    - relies on an external entity to create them
 
+- 118. Setting up a "context" for the user
+  - easier to do on AWS
+  - create new users
+    - apply YAML
+  - follow commands below to see what was done on AWS
+  - kubectl config view
+  - "context" block allows us to administer several clusters from a single window
+    - which cluster to talk to
+    - what user to use
+        [ec2-user@ip-172-31-42-64 dev]$ kubectl config view
+        apiVersion: v1
+        clusters:
+        - cluster:
+            certificate-authority-data: DATA+OMITTED
+            server: https://2664A7C5B3DA215894DB3E7F9E635B9A.gr7.us-east-1.eks.amazonaws.com
+          name: fleetman.us-east-1.eksctl.io
+        contexts:
+        - context:
+            cluster: fleetman.us-east-1.eksctl.io
+            user: eksUser@fleetman.us-east-1.eksctl.io
+          name: eksUser@fleetman.us-east-1.eksctl.io
+        current-context: eksUser@fleetman.us-east-1.eksctl.io
+    - need to set one up for francis
+  - even after being set up
+    - users still can't access the cluster w/o proving who they are ... next video ...
+
+- 119. Issuing a K8S Cluster X.509 Certificate
+  - in k8s, there's no built-in system to issue/create users
+  - X.509 certs prove you are who you say you are
+    - plenty of places to buy one
+    - for this purpose, no need to buy - we're not standing up a secure production site
+  - clusters have "secret files" that can be used as certs
+  - superuser can issue cmd line cmds to access these files, create a cert & issue to new users
+    - since superuser knows the users they have created, the certs they give to them are "trusted"
+  - use openssl cmd to create private key for user, a certificate request, access k8s cluster private key {s3 ?}
+  - lots of cmds, mostly openssl, set up name, expiration, etc
+
+- 120. Installing the user's certificate
+  - use k8s private key to create a user cert for k8s, created by super-user
+  - once created, create folder in user dir
+    - usually .ssh, .certs
+  - copy files into user dir, chmod & chown
+
+- 121. Allocating Access to Users
+  - lots more cmds
+    - kubectl config set-credentials userNm --clientCert=... --client-key=...
+  - user cfg'd at this point
+  - now have to add k8s credentials for this user
+    - kubectl config set-cluster clusterNm --certAuthority=k8s.crt
+  - this gets us to "talk to" the k8s cluster
+    - BUT - tells user is "FORBIDDEN" to access any of the
+  - this is where the initial RoleBindings video comes into play - need to have the YAML applied by superuser
+
+- 122. ClusterRoles & ClusterRoleBindings
+  - Roles and RoleBindings in cfg file is bound to the default namespace - how to expand ?
+  - change YAML file tags to be Cluster-specific
 
 COMMANDS
+- on aWS
+sudo useradd francis-linux
+sudo passwd francis-linux
+Changing password for user francis-linux.
+New password:
+BAD PASSWORD: The password fails the dictionary check - it is based on a dictionary word
+Retype new password:
+passwd: all authentication tokens updated successfully.
+
+kubectl create ns francis
+namespace/francis created
+
+kubectl get ns
+NAME              STATUS   AGE
+default           Active   24m
+francis           Active   10m
+kube-node-lease   Active   24m
+kube-public       Active   24m
+kube-system       Active   24m
+
+[ec2-user@ip-172-31-42-64 dev]$ su - francis-linux
+Password:
+[francis-linux@ip-172-31-42-64 ~]$ ls -al
+total 12
+drwx------ 2 francis-linux francis-linux  62 Oct 24 12:30 .
+drwxr-xr-x 4 root          root           43 Oct 24 12:30 ..
+-rw-r--r-- 1 francis-linux francis-linux  18 Jan 16  2020 .bash_logout
+-rw-r--r-- 1 francis-linux francis-linux 193 Jan 16  2020 .bash_profile
+-rw-r--r-- 1 francis-linux francis-linux 231 Jan 16  2020 .bashrc
+[francis-linux@ip-172-31-42-64 ~]$ kubectl get all
+The connection to the server localhost:8080 was refused - did you specify the right host or port?
+[francis-linux@ip-172-31-42-64 ~]$ exit
+
+[ec2-user@ip-172-31-42-64 dev]$ kubectl config view
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: DATA+OMITTED
+    server: https://2664A7C5B3DA215894DB3E7F9E635B9A.gr7.us-east-1.eks.amazonaws.com
+  name: fleetman.us-east-1.eksctl.io
+contexts:
+- context:
+    cluster: fleetman.us-east-1.eksctl.io
+    user: eksUser@fleetman.us-east-1.eksctl.io
+  name: eksUser@fleetman.us-east-1.eksctl.io
+current-context: eksUser@fleetman.us-east-1.eksctl.io
+kind: Config
+preferences: {}
+users:
+- name: eksUser@fleetman.us-east-1.eksctl.io
+  user:
+    exec:
+      apiVersion: client.authentication.k8s.io/v1alpha1
+      args:
+      - eks
+      - get-token
+      - --cluster-name
+      - fleetman
+      - --region
+      - us-east-1
+      command: aws
+      env:
+      - name: AWS_STS_REGIONAL_ENDPOINTS
+        value: regional
+6  kubectl config set-cluster fleetman.us-east-1.eksctl.io --server=https://2664A7C5B3DA215894DB3E7F9E635B9A.gr7.us-east-1.eks.amazonaws.com
+9  kubectl config set-context francis --user francis-linux --cluster fleetman.us-east-1.eksctl.io
+10  kubectl config view
+11  kubectl get all
+12  kubectl config use-context francis
+13  kubectl config view
+14  kubectl get all
+kubectl get all
+Please enter Username: francis
+Please enter Password: Unable to connect to the server: x509: certificate signed by unknown authority

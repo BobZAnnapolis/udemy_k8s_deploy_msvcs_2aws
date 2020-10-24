@@ -17,7 +17,7 @@ metadata:
   namespace: default
 subjects:
 - kind: User
-  name: francis-linux-login-name
+  name: francis-linux
 roleRef:
   kind: Role
   name: new-joiner
