@@ -1,10 +1,18 @@
 Section 33. Continuous Deployment on a K8S Cluster
 
 - 145. Introducing CI/CD
-  - 
+  - integrating single step past processes into quicker procedure
+  - using unit testing, validation, verification
+    - w/proper validation in place
+      - "automatically" deploy latest validated version of a committed microservice into the cluster
+  - will need frameworks to support this process
+  - CruiseControl -> replaced by Hudson -> forked to Jenkins
+    - Jenkins starting to show its age
 
 - 146. Establishing a GitHub organization
 - 147. Setting Up A Basic Jenkins System
+  - 
+
 - 148. Defining a Pipeline
 - 149. Running a multi-branch Pipeline
 - 150. Reviewing Builds
