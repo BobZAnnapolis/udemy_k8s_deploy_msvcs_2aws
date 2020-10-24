@@ -1,0 +1,15 @@
+Section 33. Continuous Deployment on a K8S Cluster
+
+- 145. Introducing CI/CD
+  - 
+
+- 146. Establishing a GitHub organization
+- 147. Setting Up A Basic Jenkins System
+- 148. Defining a Pipeline
+- 149. Running a multi-branch Pipeline
+- 150. Reviewing Builds
+- 151. Organization Pipelines
+- 152: Continuous Deployment into a Cluster
+
+
+COMMANDS

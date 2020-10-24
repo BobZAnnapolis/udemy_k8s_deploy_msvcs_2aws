@@ -1,12 +1,46 @@
 Section 32. Other Workload Types
 
 - 139. Batch Jobs
-  - 
-- 140. Cron jobs
-- 141. DaemonSets
-- 142. StatefulSets Overview
-- 143. StatefulSets for Database Replication
-- 144. Demo : Scaling Out a Mongo DB
+  - does create a pod
+  - k8s makes sure it runs to completion
+  - eg, report, finds accounts to be abandoned
+  - "restartNever" tag : Never
+    - w/o this - after it completes, k8s will restart
+  - these kinds of jobs stay active/visible - SysAdmins need to manually review & delete
 
+- 140. Cron jobs
+  - backoffLimit - # times k8s should re-schedule the job when it fails
+  - time-based scheduled jobs
+
+- 141. DaemonSets
+  - ensures that ALL NODES run a copy of a pod
+  - RARE that in a microservice application will need to have the same msvcs on every node
+    - EXCEPTION : ELK STACK - NEED FLUENTD RUNNING ON EVERY NODE
+  - change "kind:Deployment" to "kind:DaemonSet" & get rid of 'replicas' {redundant in a daemonset}
+
+- 142. StatefulSets Overview
+  - manage deployment and scaling of a set of pods;
+  - provides guarantees about the ordering and uniqueness of these pods
+  - NOT used for PERSISTENCE, ie data lives longer than lifetime of pod
+    - this is accomplished by creating dbs attached to a volume, using s3, etc
+  - SOMETIMES YOU NEED A SET OF PODS WITH PREDICTABLE NAMES
+    - eg, CLIENTS NEED TO BE ABLE TO CALL THEM BY THEIR NAME
+      - certain software needs to access known named
+  - pods will always have a name
+  - will start in sequence
+  - clients can call them by name
+
+- 143. StatefulSets for Database Replication
+  - Usual Use :
+    - You have a database
+    - You want to replicate it
+    - DBs can't usually be replicated by simple ReplicaSets/Deployments
+      - DBs need to know who is primary / secondary
+      - client needs to know which one is primary as well {BAD}
+
+- 144. Demo : Scaling Out a Mongo DB
+  - SUGGESTION : TRY TO MAKE YOUR DBs OUTSIDE OF YOUR CLUSTER
+  - K8S : NO SPECIAL SYNTAX FOR "HEADLESS SERVICE" :-(
+  - 
 
 COMMANDS
